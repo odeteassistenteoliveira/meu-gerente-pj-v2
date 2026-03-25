@@ -4,7 +4,7 @@ import type { ModuloIA } from "@/types";
 export const runtime = "edge";
 export const maxDuration = 60;
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-1.5-flash";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 export async function POST(req: Request) {
