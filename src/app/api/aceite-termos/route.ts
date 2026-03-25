@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
@@ -14,33 +14,28 @@ export async function POST(request: NextRequest) {
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet) {
+          setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
             } catch {
-              // Route Handler — ignora erros de cookie em Server Components
+              // Route Handler — ignora erros de leitura em Server Components
             }
           },
         },
       }
     );
 
-    // Obtém o usuário autenticado
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: "Não autenticado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    // Captura IP real (Vercel/proxy-aware)
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
@@ -49,7 +44,6 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get("user-agent") || "";
     const versaoTermos = "1.0";
 
-    // Registra o aceite
     const { error: insertError } = await supabase
       .from("termos_aceite")
       .insert({
@@ -61,10 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("[aceite-termos] Erro ao inserir:", insertError);
-      return NextResponse.json(
-        { error: "Erro ao registrar aceite" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Erro ao registrar aceite" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, versao: versaoTermos });
