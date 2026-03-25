@@ -4,7 +4,7 @@ import type { ModuloIA } from "@/types";
 export const runtime = "edge";
 export const maxDuration = 60;
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1";
 
 export async function POST(req: Request) {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     const systemPrompt = getSystemPrompt(modulo || "geral", empresa);
 
-    // v1 API: inject system prompt as initial conversation turns
+    // Inject system prompt as initial conversation turns
     const systemTurn = systemPrompt
       ? [
           { role: "user" as const, parts: [{ text: systemPrompt }] },
