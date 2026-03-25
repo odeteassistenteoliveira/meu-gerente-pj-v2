@@ -5,7 +5,7 @@ export const runtime = "edge";
 export const maxDuration = 60;
 
 const GEMINI_MODEL = "gemini-1.5-flash";
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1";
 
 export async function POST(req: Request) {
   try {
