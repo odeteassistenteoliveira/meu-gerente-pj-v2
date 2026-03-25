@@ -1,9 +1,11 @@
-import { getGeminiClient, MODELOS } from "@/lib/anthropic/client";
 import { getSystemPrompt } from "@/lib/anthropic/prompts";
 import type { ModuloIA } from "@/types";
 
 export const runtime = "edge";
 export const maxDuration = 60;
+
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 export async function POST(req: Request) {
   try {
@@ -12,70 +14,74 @@ export async function POST(req: Request) {
       modulo: ModuloIA;
       empresa?: Record<string, unknown>;
     };
-
     if (!messages?.length) {
-      return Response.json(
-        { error: "Mensagens são obrigatórias" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Mensagens obrigatorias" }, { status: 400 });
     }
-
-    const genAI = getGeminiClient();
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("[Chat API Error] GEMINI_API_KEY nao configurada");
+      return Response.json({ error: "Configuracao invalida" }, { status: 500 });
+    }
     const systemPrompt = getSystemPrompt(modulo || "geral", empresa);
-
-    const model = genAI.getGenerativeModel({
-      model: MODELOS.PRINCIPAL,
-      systemInstruction: systemPrompt,
-    });
-
-    const geminiMessages = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : ("user" as const),
+    const geminiContents = messages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     }));
-
-    const history = geminiMessages.slice(0, -1);
-    const lastMessage = geminiMessages[geminiMessages.length - 1];
-
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessageStream(lastMessage.parts[0].text);
-
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
+    const body = JSON.stringify({
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: geminiContents,
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+    });
+    const url = GEMINI_API_BASE + "/models/" + GEMINI_MODEL + ":streamGenerateContent?key=" + apiKey + "&alt=sse";
+    const geminiRes = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+    if (!geminiRes.ok || !geminiRes.body) {
+      const errText = await geminiRes.text().catch(() => "unknown");
+      console.error("[Chat API Error] Gemini:", geminiRes.status, errText);
+      return Response.json({ error: "Erro ao chamar IA" }, { status: 500 });
+    }
+    const stream = new ReadableStream({
+      async start(ctrl) {
+        const enc = new TextEncoder();
+        const reader = geminiRes.body!.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
         try {
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
-            if (text) {
-              const data = JSON.stringify({ text });
-              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop() || "";
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const raw = line.slice(6).trim();
+              if (!raw || raw === "[DONE]") continue;
+              try {
+                const p = JSON.parse(raw);
+                const t = p?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (t) ctrl.enqueue(enc.encode("data: " + JSON.stringify({ text: t }) + "\n\n"));
+              } catch (_e) {}
             }
           }
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-          controller.close();
-        } catch (err) {
-          console.error("[Gemini Stream Error]", err);
-          const errorMsg = JSON.stringify({
-            text: "\n\n_Erro ao processar. Tente novamente._",
-          });
-          controller.enqueue(encoder.encode(`data: ${errorMsg}\n\n`));
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-          controller.close();
+          ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
+          ctrl.close();
+        } catch (streamErr) {
+          console.error("[Gemini Stream]", streamErr);
+          ctrl.enqueue(enc.encode("data: " + JSON.stringify({ text: "\n\n_Erro. Tente novamente._" }) + "\n\n"));
+          ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
+          ctrl.close();
         }
       },
     });
-
-    return new Response(readableStream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
     });
   } catch (error) {
     console.error("[Chat API Error]", error);
-    return Response.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Erro interno" }, { status: 500 });
   }
-}
+              }
