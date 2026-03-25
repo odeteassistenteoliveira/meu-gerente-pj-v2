@@ -27,13 +27,23 @@ export async function POST(req: Request) {
 
     const systemPrompt = getSystemPrompt(modulo || "geral", empresa);
 
-    const geminiContents = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+    // v1 API does not support systemInstruction field; inject as initial conversation turns
+    const systemTurn = systemPrompt
+      ? [
+          { role: "user" as const, parts: [{ text: systemPrompt }] },
+          { role: "model" as const, parts: [{ text: "Entendido. Seguirei essas instrucoes em toda a conversa." }] },
+        ]
+      : [];
+
+    const geminiContents = [
+      ...systemTurn,
+      ...messages.map((m) => ({
+        role: m.role === "assistant" ? ("model" as const) : ("user" as const),
+        parts: [{ text: m.content }],
+      })),
+    ];
 
     const requestBody = {
-      systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: geminiContents,
       generationConfig: {
         temperature: 0.7,
@@ -84,7 +94,7 @@ export async function POST(req: Request) {
                   );
                 }
               } catch {
-                // chunk malformado — ignora
+                // chunk malformado
               }
             }
           }
