@@ -14,49 +14,104 @@ export async function POST(req: Request) {
       modulo: ModuloIA;
       empresa?: Record<string, unknown>;
     };
+
     if (!messages?.length) {
-      return Response.json({ error: "Mensagens obrigatorias" }, { status: 400 });
+      return Response.json({ error: "Mensagens são obrigatórias" }, { status: 400 });
     }
+
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("[Chat API Error] GEMINI_API_KEY nao configurada");
-      return Response.json({ error: "Configuracao invalida" }, { status: 500 });
+      console.error("[Chat API Error] GEMINI_API_KEY não configurada");
+      return Response.json({ error: "Configuração inválida do servidor" }, { status: 500 });
     }
+
     const systemPrompt = getSystemPrompt(modulo || "geral", empresa);
+
     const geminiContents = messages.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     }));
-    const body = JSON.stringify({
+
+    const requestBody = {
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: geminiContents,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-    });
-    const url = GEMINI_API_BASE + "/models/" + GEMINI_MODEL + ":streamGenerateContent?key=" + apiKey + "&alt=sse";
-    const geminiRes = await fetch(url, {
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+    };
+
+    const apiUrl = `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:streamGenerateContent?key=${apiKey}&alt=sse`;
+
+    const geminiResponse = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: JSON.stringify(requestBody),
     });
-    if (!geminiRes.ok || !geminiRes.body) {
-      const errText = await geminiRes.text().catch(() => "unknown");
-      console.error("[Chat API Error] Gemini:", geminiRes.status, errText);
-      return Response.json({ error: "Erro ao chamar IA" }, { status: 500 });
+
+    if (!geminiResponse.ok || !geminiResponse.body) {
+      const errorText = await geminiResponse.text().catch(() => "unknown error");
+      console.error("[Chat API Error] Gemini retornou erro:", geminiResponse.status, errorText);
+      return Response.json({ error: "Erro ao chamar a IA" }, { status: 500 });
     }
-    const stream = new ReadableStream({
-      async start(ctrl) {
-        const enc = new TextEncoder();
-        const reader = geminiRes.body!.getReader();
-        const dec = new TextDecoder();
-        let buf = "";
+
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const reader = geminiResponse.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            buf += dec.decode(value, { stream: true });
-            const lines = buf.split("\n");
-            buf = lines.pop() || "";
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+
             for (const line of lines) {
               if (!line.startsWith("data: ")) continue;
               const raw = line.slice(6).trim();
               if (!raw || raw === "[DONE]") continue;
+              try {
+                const parsed = JSON.parse(raw);
+                const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+                  );
+                }
+              } catch {
+                // chunk malformado — ignora
+              }
+            }
+          }
+
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch (err) {
+          console.error("[Gemini Stream Error]", err);
+          const errMsg = JSON.stringify({
+            text: "\n\n_Erro ao processar resposta. Tente novamente._",
+          });
+          controller.enqueue(encoder.encode(`data: ${errMsg}\n\n`));
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (error) {
+    console.error("[Chat API Error]", error);
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+}
