@@ -4,7 +4,7 @@ import type { ModuloIA } from "@/types";
 export const runtime = "edge";
 export const maxDuration = 60;
 
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-2.0-flash";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1";
 
 export async function POST(req: Request) {
@@ -16,18 +16,18 @@ export async function POST(req: Request) {
     };
 
     if (!messages?.length) {
-      return Response.json({ error: "Mensagens são obrigatórias" }, { status: 400 });
+      return Response.json({ error: "Mensagens sao obrigatorias" }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("[Chat API Error] GEMINI_API_KEY não configurada");
-      return Response.json({ error: "Configuração inválida do servidor" }, { status: 500 });
+      console.error("[Chat API Error] GEMINI_API_KEY nao configurada");
+      return Response.json({ error: "Configuracao invalida do servidor" }, { status: 500 });
     }
 
     const systemPrompt = getSystemPrompt(modulo || "geral", empresa);
 
-    // v1 API does not support systemInstruction field; inject as initial conversation turns
+    // v1 API: inject system prompt as initial conversation turns
     const systemTurn = systemPrompt
       ? [
           { role: "user" as const, parts: [{ text: systemPrompt }] },
