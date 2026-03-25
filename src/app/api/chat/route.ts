@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }],
     }));
     const body = JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
+      systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: geminiContents,
       generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
     });
@@ -60,28 +60,3 @@ export async function POST(req: Request) {
               if (!line.startsWith("data: ")) continue;
               const raw = line.slice(6).trim();
               if (!raw || raw === "[DONE]") continue;
-              try {
-                const p = JSON.parse(raw);
-                const t = p?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (t) ctrl.enqueue(enc.encode("data: " + JSON.stringify({ text: t }) + "\n\n"));
-              } catch (_e) {}
-            }
-          }
-          ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
-          ctrl.close();
-        } catch (streamErr) {
-          console.error("[Gemini Stream]", streamErr);
-          ctrl.enqueue(enc.encode("data: " + JSON.stringify({ text: "\n\n_Erro. Tente novamente._" }) + "\n\n"));
-          ctrl.enqueue(enc.encode("data: [DONE]\n\n"));
-          ctrl.close();
-        }
-      },
-    });
-    return new Response(stream, {
-      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
-    });
-  } catch (error) {
-    console.error("[Chat API Error]", error);
-    return Response.json({ error: "Erro interno" }, { status: 500 });
-  }
-              }
