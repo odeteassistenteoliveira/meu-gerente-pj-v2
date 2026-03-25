@@ -2,8 +2,7 @@ import { getAnthropicClient, MODELOS } from "@/lib/anthropic/client";
 import { getSystemPrompt } from "@/lib/anthropic/prompts";
 import type { ModuloIA } from "@/types";
 
-export const runtime = "edge";
-export const maxDuration = 60;
+export const maxDuration = 10;
 
 export async function POST(req: Request) {
   try {
