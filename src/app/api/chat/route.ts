@@ -2,7 +2,7 @@ import { getGeminiClient, MODELOS } from "@/lib/anthropic/client";
 import { getSystemPrompt } from "@/lib/anthropic/prompts";
 import type { ModuloIA } from "@/types";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -29,10 +29,8 @@ export async function POST(req: Request) {
     });
 
     // Converte mensagens do formato Anthropic para o formato Gemini
-    // Anthropic: { role: "user"|"assistant", content: string }
-    // Gemini:    { role: "user"|"model",     parts: [{ text: string }] }
     const geminiMessages = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
+      role: m.role === "assistant" ? "model" : ("user" as const),
       parts: [{ text: m.content }],
     }));
 
@@ -41,7 +39,7 @@ export async function POST(req: Request) {
     const lastMessage = geminiMessages[geminiMessages.length - 1];
 
     const chat = model.startChat({ history });
-    const result = await chat.sendMessageStream(lastMessage.parts);
+    const result = await chat.sendMessageStream(lastMessage.parts[0].text);
 
     // Stream SSE — mesmo formato que o frontend espera
     const readableStream = new ReadableStream({
