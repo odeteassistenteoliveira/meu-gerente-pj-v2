@@ -2,7 +2,7 @@ import { getGeminiClient, MODELOS } from "@/lib/anthropic/client";
 import { getSystemPrompt } from "@/lib/anthropic/prompts";
 import type { ModuloIA } from "@/types";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -28,20 +28,17 @@ export async function POST(req: Request) {
       systemInstruction: systemPrompt,
     });
 
-    // Converte mensagens do formato Anthropic para o formato Gemini
     const geminiMessages = messages.map((m) => ({
       role: m.role === "assistant" ? "model" : ("user" as const),
       parts: [{ text: m.content }],
     }));
 
-    // Separa a última mensagem (que será enviada como prompt)
     const history = geminiMessages.slice(0, -1);
     const lastMessage = geminiMessages[geminiMessages.length - 1];
 
     const chat = model.startChat({ history });
     const result = await chat.sendMessageStream(lastMessage.parts[0].text);
 
-    // Stream SSE — mesmo formato que o frontend espera
     const readableStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -58,7 +55,7 @@ export async function POST(req: Request) {
         } catch (err) {
           console.error("[Gemini Stream Error]", err);
           const errorMsg = JSON.stringify({
-            text: "\n\n_Desculpe, ocorreu um erro ao processar. Tente novamente._",
+            text: "\n\n_Erro ao processar. Tente novamente._",
           });
           controller.enqueue(encoder.encode(`data: ${errorMsg}\n\n`));
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
