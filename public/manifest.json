@@ -1,0 +1,50 @@
+{
+  "name": "Meu Gerente PJ",
+  "short_name": "Gerente PJ",
+  "description": "Consultor financeiro com IA para pequenas e médias empresas",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#1B2A4A",
+  "theme_color": "#1B2A4A",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Calculadora Financeira",
+      "short_name": "Calculadora",
+      "description": "Calcule juros, ponto de equilíbrio e capital de giro",
+      "url": "/calculadora",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Simulador de Crédito",
+      "short_name": "Crédito",
+      "description": "Compare linhas de crédito e CET real",
+      "url": "/credito",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
