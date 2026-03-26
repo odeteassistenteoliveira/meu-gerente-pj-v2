@@ -6,21 +6,21 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2, Sparkles, Eye, EyeOff, ChevronRight } from "lucide-react";
 
-/* Ã¢ÂÂÃ¢ÂÂ Dados de formulÃÂ¡rio Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
+/* ── Dados de formulário ─────────────────────────── */
 const setores = [
-  { value: "comercio",    label: "ComÃÂ©rcio / Varejo" },
-  { value: "servicos",    label: "PrestaÃÂ§ÃÂ£o de ServiÃÂ§os" },
-  { value: "industria",   label: "IndÃÂºstria / Manufatura" },
-  { value: "agronegocio", label: "AgronegÃÂ³cio" },
+  { value: "comercio",    label: "Comércio / Varejo" },
+  { value: "servicos",    label: "Prestação de Serviços" },
+  { value: "industria",   label: "Indústria / Manufatura" },
+  { value: "agronegocio", label: "Agronegócio" },
   { value: "tecnologia",  label: "Tecnologia / SaaS" },
-  { value: "saude",       label: "SaÃÂºde / FarmÃÂ¡cia" },
-  { value: "construcao",  label: "ConstruÃÂ§ÃÂ£o Civil" },
-  { value: "educacao",    label: "EducaÃÂ§ÃÂ£o" },
+  { value: "saude",       label: "Saúde / Farmácia" },
+  { value: "construcao",  label: "Construção Civil" },
+  { value: "educacao",    label: "Educação" },
   { value: "outro",       label: "Outro" },
 ];
 
 const faixasFaturamento = [
-  { value: 1000000,  label: "AtÃÂ© R$1MM / ano" },
+  { value: 1000000,  label: "Até R$1MM / ano" },
   { value: 3000000,  label: "R$1MM a R$3MM / ano" },
   { value: 10000000, label: "R$3MM a R$10MM / ano" },
   { value: 30000000, label: "R$10MM a R$30MM / ano" },
@@ -28,28 +28,28 @@ const faixasFaturamento = [
 
 const opcoesDesafios = [
   "Controle de fluxo de caixa",
-  "Acesso a crÃÂ©dito com juros baixos",
+  "Acesso a crédito com juros baixos",
   "Taxas altas de maquininha/banco",
   "Onde investir o caixa da empresa",
-  "Planejamento tributÃÂ¡rio",
-  "GestÃÂ£o de capital de giro",
+  "Planejamento tributário",
+  "Gestão de capital de giro",
 ];
 
 const opcoesComoConheceu = [
   "Google / pesquisa",
   "Instagram / Facebook",
   "LinkedIn",
-  "IndicaÃÂ§ÃÂ£o de amigo",
+  "Indicação de amigo",
   "Contador / consultor",
   "Outro",
 ];
 
 const numFuncionarios = [
-  { value: "1",     label: "SÃÂ³ eu (MEI / sÃÂ³cio)" },
-  { value: "2-5",   label: "2 a 5 funcionÃÂ¡rios" },
-  { value: "6-20",  label: "6 a 20 funcionÃÂ¡rios" },
-  { value: "21-50", label: "21 a 50 funcionÃÂ¡rios" },
-  { value: "50+",   label: "Mais de 50 funcionÃÂ¡rios" },
+  { value: "1",     label: "Só eu (MEI / sócio)" },
+  { value: "2-5",   label: "2 a 5 funcionários" },
+  { value: "6-20",  label: "6 a 20 funcionários" },
+  { value: "21-50", label: "21 a 50 funcionários" },
+  { value: "50+",   label: "Mais de 50 funcionários" },
 ];
 
 type Etapa = "conta" | "empresa" | "perfil" | "pronto";
@@ -60,11 +60,11 @@ const etapasLabel: Record<string, string> = {
   perfil: "Perfil",
 };
 
-/* Ã¢ÂÂÃ¢ÂÂ Componente principal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
+/* ── Componente principal ────────────────────────── */
 export default function CadastroPage() {
   const [etapa, setEtapa] = useState<Etapa>("conta");
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState(""); const [userId, setUserId] = useState<string | null>(null);
+  const [erro, setErro] = useState("");
   const [verSenha, setVerSenha] = useState(false);
   const router = useRouter();
 
@@ -72,7 +72,7 @@ export default function CadastroPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
-  // Etapa 2 Ã¢ÂÂ Empresa
+  // Etapa 2 — Empresa
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [cpfSocio, setCpfSocio] = useState("");
@@ -84,7 +84,7 @@ export default function CadastroPage() {
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
 
-  // Etapa 3 Ã¢ÂÂ Perfil financeiro
+  // Etapa 3 — Perfil financeiro
   const [setor, setSetor] = useState("servicos");
   const [faturamento, setFaturamento] = useState(3000000);
   const [regime, setRegime] = useState("simples_nacional");
@@ -121,16 +121,35 @@ export default function CadastroPage() {
     const { data: signUpData, error } = await supabase.auth.signUp({ email, password: senha });
     if (error) {
       setErro(error.message.includes("already registered")
-        ? "Este email jÃÂ¡ estÃÂ¡ cadastrado. FaÃÂ§a login."
+        ? "Este email já está cadastrado. Faça login."
         : "Erro ao criar conta. Tente novamente.");
       setCarregando(false); return;
     }
-    // Se nÃÂ£o veio sessÃÂ£o (confirmaÃÂ§ÃÂ£o de email ativa), faz login imediato
-    if (!signUpData.session) { const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: senha }); if (signInError) { setErro("Conta criada! Verifique seu email para confirmar antes de continuar."); setCarregando(false); return; } setUserId(signInData.user?.id ?? signUpData.user?.id ?? null); } else { setUserId(signUpData.user?.id ?? null); } setCarregando(false); setEtapa("empresa");
+    // Se não veio sessão (confirmação de email ativa), faz login imediato
+    if (!signUpData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: senha });
+      if (signInError) {
+        setErro("Conta criada! Verifique seu email para confirmar antes de continuar.");
+        setCarregando(false); return;
+      }
+    }
+    setCarregando(false);
+    setEtapa("empresa");
   }
 
   async function handleSalvarEmpresa(e: React.FormEvent) {
     e.preventDefault();
+
+    // Validação: CNPJ ou CPF do sócio é obrigatório
+    const cnpjLimpo = cnpj.replace(/\D/g, "");
+    const cpfLimpo = cpfSocio.replace(/\D/g, "");
+
+    if (!cnpjLimpo && !cpfLimpo) {
+      setErro("Informe o CNPJ da empresa ou CPF do sócio para continuar.");
+      return;
+    }
+
+    setErro("");
     setEtapa("perfil");
   }
 
@@ -138,10 +157,11 @@ export default function CadastroPage() {
     e.preventDefault();
     setErro(""); setCarregando(true);
     const supabase = createClient();
-    if (!userId) { setCarregando(false); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setErro("Sessão expirada. Faça login novamente."); setCarregando(false); return; }
 
     const { error } = await supabase.from("empresas").insert({
-      user_id: userId,
+      user_id: user.id,
       nome_fantasia: nomeFantasia,
       cnpj: cnpj.replace(/\D/g, "") || null,
       cpf_socio: cpfSocio.replace(/\D/g, "") || null,
@@ -164,12 +184,12 @@ export default function CadastroPage() {
 
     if (error) { setErro("Erro ao salvar dados. Tente novamente."); setCarregando(false); return; }
 
-    // Enviar email de boas-vindas (fire and forget Ã¢ÂÂ nÃÂ£o bloqueia o fluxo)
+    // Enviar email de boas-vindas (fire and forget — não bloqueia o fluxo)
     try {
       fetch("/api/email/welcome", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, nomeEmpresa: nomeFantasia }),
+        body: JSON.stringify({ email: user.email, nomeEmpresa: nomeFantasia }),
       }).catch(() => {}); // silencia erros de rede
     } catch (_) {}
 
@@ -192,7 +212,7 @@ export default function CadastroPage() {
           <h1 className="text-lg font-bold text-white">Meu Gerente PJ</h1>
           <div className="flex items-center justify-center gap-1.5 mt-1">
             <Sparkles size={11} className="text-blue-300" />
-            <p className="text-xs text-blue-300">Comece grÃÂ¡tis Ã¢ÂÂ sem cartÃÂ£o</p>
+            <p className="text-xs text-blue-300">Comece grátis — sem cartão</p>
           </div>
         </div>
 
@@ -206,7 +226,7 @@ export default function CadastroPage() {
                   i < etapaIdx ? "bg-green-400 text-white" :
                   "bg-white/15 text-white/40"
                 }`}>
-                  {i < etapaIdx ? "Ã¢ÂÂ" : i + 1}
+                  {i < etapaIdx ? "✓" : i + 1}
                   <span className="hidden sm:inline">{etapasLabel[e]}</span>
                 </div>
                 {i < etapasOrdem.length - 1 && (
@@ -220,7 +240,7 @@ export default function CadastroPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-6">
 
-          {/* Ã¢ÂÂÃ¢ÂÂ Etapa 1: Conta Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ── Etapa 1: Conta ── */}
           {etapa === "conta" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-5">Criar sua conta</h2>
@@ -232,48 +252,40 @@ export default function CadastroPage() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Senha</label>
                   <div className="relative">
-                    <input type={verSenha ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={6} placeholder="MÃÂ­nimo 6 caracteres" className="input-base pr-10" />
+                    <input type={verSenha ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" className="input-base pr-10" />
                     <button type="button" onClick={() => setVerSenha(!verSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {verSenha ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
                 </div>
                 {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{erro}</div>}
-                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-3">
-              <span className="mt-0.5 text-sm">📧</span>
-              <span>Após criar sua conta, você receberá um <strong>e-mail de confirmação</strong>. É necessário confirmar o e-mail para conseguir fazer login na plataforma.</span>
-            </div>
-            <button type="submit" disabled={carregando || !email || !senha} className="w-full btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
+                <button type="submit" disabled={carregando || !email || !senha} className="w-full btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
                   {carregando && <Loader2 size={15} className="animate-spin" />}
                   {carregando ? "Criando conta..." : "Continuar"}
                 </button>
               </form>
-              <p className="text-center text-sm text-gray-500 mt-4">JÃÂ¡ tem conta? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Entrar</Link></p>
+              <p className="text-center text-sm text-gray-500 mt-4">Já tem conta? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Entrar</Link></p>
             </>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ Etapa 2: Empresa Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ── Etapa 2: Empresa ── */}
           {etapa === "empresa" && (
             <>
-              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 mb-4">
-              <span className="mt-0.5 text-sm">📬</span>
-              <span><strong>Verifique seu e-mail!</strong> Enviamos um link de confirmação para <strong>{email}</strong>. Confirme antes de tentar fazer login.</span>
-            </div>
-            <h2 className="text-[15px] font-bold text-gray-900 mb-1">Dados da empresa</h2>
-              <p className="text-xs text-gray-400 mb-5">Campos marcados com * sÃÂ£o obrigatÃÂ³rios</p>
+              <h2 className="text-[15px] font-bold text-gray-900 mb-1">Dados da empresa</h2>
+              <p className="text-xs text-gray-400 mb-5">Campos marcados com * são obrigatórios</p>
               <form onSubmit={handleSalvarEmpresa} className="space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Nome da empresa *</label>
-                    <input type="text" value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} required placeholder="Nome fantasia ou razÃÂ£o social" className="input-base" />
+                    <input type="text" value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} required placeholder="Nome fantasia ou razão social" className="input-base" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CNPJ</label>
-                    <input type="text" value={cnpj} onChange={(e) => setCnpj(formatarCNPJ(e.target.value))} placeholder="00.000.000/0001-00" className="input-base" inputMode="numeric" />
+                    <input type="text" value={cnpj} onChange={(e) => setCnpj(formatarCNPJ(e.target.value))} placeholder="00.000.000/0001-00" className="input-base" inputMode="numeric" maxLength={18} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CPF do sÃÂ³cio</label>
-                    <input type="text" value={cpfSocio} onChange={(e) => setCpfSocio(e.target.value)} placeholder="000.000.000-00" className="input-base" inputMode="numeric" />
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CPF do sócio</label>
+                    <input type="text" value={cpfSocio} onChange={(e) => setCpfSocio(e.target.value)} placeholder="000.000.000-00" className="input-base" inputMode="numeric" maxLength={14} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Telefone *</label>
@@ -285,7 +297,7 @@ export default function CadastroPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Cidade</label>
-                    <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="SÃÂ£o Paulo" className="input-base" />
+                    <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="São Paulo" className="input-base" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Estado</label>
@@ -299,13 +311,15 @@ export default function CadastroPage() {
                 </div>
 
                 <div className="border-t border-gray-100 pt-3.5">
-                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2.5">PresenÃÂ§a digital <span className="text-gray-400 font-normal normal-case tracking-normal">(opcional)</span></p>
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2.5">Presença digital <span className="text-gray-400 font-normal normal-case tracking-normal">(opcional)</span></p>
                   <div className="space-y-2.5">
-                    <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="Ã°ÂÂÂ Site: https://suaempresa.com.br" className="input-base" />
-                    <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Ã°ÂÂÂ¸ Instagram: @suaempresa" className="input-base" />
-                    <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="Ã°ÂÂÂ¼ LinkedIn: linkedin.com/company/..." className="input-base" />
+                    <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="🌐 Site: https://suaempresa.com.br" className="input-base" />
+                    <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="📸 Instagram: @suaempresa" className="input-base" />
+                    <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="💼 LinkedIn: linkedin.com/company/..." className="input-base" />
                   </div>
                 </div>
+
+                {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{erro}</div>}
 
                 <button type="submit" disabled={!nomeFantasia || !telefone} className="w-full btn-primary py-3 rounded-xl text-[14px]">
                   Continuar
@@ -314,11 +328,11 @@ export default function CadastroPage() {
             </>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ Etapa 3: Perfil financeiro Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ── Etapa 3: Perfil financeiro ── */}
           {etapa === "perfil" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-1">Perfil financeiro</h2>
-              <p className="text-xs text-gray-400 mb-5">Isso personaliza as respostas do consultor para o seu negÃÂ³cio.</p>
+              <p className="text-xs text-gray-400 mb-5">Isso personaliza as respostas do consultor para o seu negócio.</p>
               <form onSubmit={handleSalvarPerfil} className="space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -328,7 +342,7 @@ export default function CadastroPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">FuncionÃÂ¡rios</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Funcionários</label>
                     <select value={numFunc} onChange={(e) => setNumFunc(e.target.value)} className="input-base">
                       {numFuncionarios.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                     </select>
@@ -340,7 +354,7 @@ export default function CadastroPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Regime tributÃÂ¡rio</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Regime tributário</label>
                     <select value={regime} onChange={(e) => setRegime(e.target.value)} className="input-base">
                       <option value="mei">MEI</option>
                       <option value="simples_nacional">Simples Nacional</option>
@@ -360,7 +374,7 @@ export default function CadastroPage() {
                             ? "border-blue-500 bg-blue-50 text-blue-700 font-medium"
                             : "border-gray-200 text-gray-600 hover:border-gray-300"
                         }`}>
-                        {desafios.includes(d) ? "Ã¢ÂÂ " : ""}{d}
+                        {desafios.includes(d) ? "✓ " : ""}{d}
                       </button>
                     ))}
                   </div>
@@ -402,14 +416,14 @@ export default function CadastroPage() {
             </>
           )}
 
-          {/* Ã¢ÂÂÃ¢ÂÂ Etapa 4: Pronto Ã¢ÂÂÃ¢ÂÂ */}
+          {/* ── Etapa 4: Pronto ── */}
           {etapa === "pronto" && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={36} className="text-green-500" />
               </div>
               <h2 className="font-bold text-gray-900 text-lg mb-2">Tudo pronto!</h2>
-              <p className="text-sm text-gray-500 leading-relaxed">Seu Gerente PJ estÃÂ¡ configurado e pronto para te ajudar.</p>
+              <p className="text-sm text-gray-500 leading-relaxed">Seu Gerente PJ está configurado e pronto para te ajudar.</p>
               <div className="flex items-center justify-center gap-1.5 mt-4">
                 <Loader2 size={12} className="animate-spin text-gray-400" />
                 <p className="text-xs text-gray-400">Abrindo o painel...</p>
@@ -419,7 +433,7 @@ export default function CadastroPage() {
         </div>
 
         <p className="text-center text-xs text-blue-400/60 mt-5">
-          Gerente com 20+ anos de experiÃÂªncia ÃÂ· CEA & CFP ÃÂ· Dados protegidos pela LGPD
+          Gerente com 20+ anos de experiência · CEA & CFP · Dados protegidos pela LGPD
         </p>
       </div>
     </div>
