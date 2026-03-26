@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Cliente admin (service role) para atualizar sem RLS
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Mapeamento: plano → valor do campo `plano` na tabela empresas
 const PLANO_MAP: Record<string, string> = {
   pro:          "pro",
   essencial:    "essencial",
@@ -16,18 +14,26 @@ const PLANO_MAP: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verifica autenticidade do webhook via header asaas-access-token
+    const webhookSecret = process.env.ASAAS_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const tokenRecebido = req.headers.get("asaas-access-token") ?? "";
+      if (tokenRecebido !== webhookSecret) {
+        console.warn("Webhook Asaas: token inválido recebido");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
     const event = await req.json();
     const eventType: string = event.event ?? "";
     const payment = event.payment ?? {};
 
     console.log("Asaas webhook:", eventType, payment?.id);
 
-    // Só processa eventos de pagamento confirmado
     if (!["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"].includes(eventType)) {
       return NextResponse.json({ ok: true, skipped: true });
     }
 
-    // externalReference = "userId|plano|ciclo"
     const ref: string = payment.externalReference ?? "";
     const parts = ref.split("|");
     if (parts.length < 2) {
@@ -43,7 +49,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, skipped: true });
     }
 
-    // Calcula data de expiração do plano
     const agora = new Date();
     const validade = new Date(agora);
     if (ciclo === "anual") {
@@ -52,7 +57,6 @@ export async function POST(req: NextRequest) {
       validade.setMonth(validade.getMonth() + 1);
     }
 
-    // Atualiza o plano da empresa
     const { error } = await supabaseAdmin
       .from("empresas")
       .update({
