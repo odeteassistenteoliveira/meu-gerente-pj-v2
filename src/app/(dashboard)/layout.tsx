@@ -37,7 +37,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .from("empresas").select("nome_fantasia, plano").eq("user_id", user.id).single();
       if (data) {
         setNomeEmpresa(data.nome_fantasia ?? "");
-        setPlano(data.plano === "pro" ? "Pro" : "Starter");
+        const planoMap: Record<string, string> = {
+          starter: "Starter", pro: "Pro", essencial: "Essencial", profissional: "Profissional"
+        };
+        setPlano(planoMap[data.plano] ?? "Starter");
       }
     }
     load();
@@ -216,3 +219,4 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+
