@@ -63,6 +63,8 @@ export default function CadastroPage() {
       console.warn("Aviso: não foi possível registrar aceite dos termos.");
     }
 
+    // Garante sessão ativa após signup (mailer_autoconfirm=true mas sessão não é automática)
+    await supabase.auth.signInWithPassword({ email, password: senha });
     setCarregando(false);
     setEtapa("empresa");
   }
