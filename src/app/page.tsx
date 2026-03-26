@@ -6,31 +6,31 @@ import {
 import PlanosSection from "@/components/landing/PlanosSection";
 
 const modulos = [
-  { icon: Calculator,  cor: "bg-blue-50 text-blue-600",   label: "Calculadora Financeira",   desc: "Juros compostos, antecipação de recebíveis, capital de giro e ponto de equilíbrio — tudo em linguagem simples." },
-  { icon: CreditCard,  cor: "bg-purple-50 text-purple-600", label: "Simulador de Crédito",  desc: "Compare BNDES, Pronampe e capital de giro. Veja o CET real sem viés de banco." },
-  { icon: TrendingUp,  cor: "bg-orange-50 text-orange-600", label: "Taxas & Tarifas",       desc: "Descubra se está pagando caro na maquininha, conta PJ, Pix ou boleto." },
-  { icon: Landmark,    cor: "bg-green-50 text-green-600",   label: "Especialista Bancário", desc: "Horários de TED, compensação de boleto, dias úteis e regras do Bacen." },
-  { icon: Building2,   cor: "bg-teal-50 text-teal-600",     label: "Investimentos PJ",      desc: "CDB, Tesouro Direto, LCI e LCA com rendimento líquido já descontado o IR." },
+  { icon: Calculator,  cor: "bg-blue-50 text-blue-600",   label: "Calculadora Financeira",   desc: "Juros compostos, antecipaÃ§Ã£o de recebÃ­veis, capital de giro e ponto de equilÃ­brio â tudo em linguagem simples." },
+  { icon: CreditCard,  cor: "bg-purple-50 text-purple-600", label: "Simulador de CrÃ©dito",  desc: "Compare BNDES, Pronampe e capital de giro. Veja o CET real sem viÃ©s de banco." },
+  { icon: TrendingUp,  cor: "bg-orange-50 text-orange-600", label: "Taxas & Tarifas",       desc: "Descubra se estÃ¡ pagando caro na maquininha, conta PJ, Pix ou boleto." },
+  { icon: Landmark,    cor: "bg-green-50 text-green-600",   label: "Especialista BancÃ¡rio", desc: "HorÃ¡rios de TED, compensaÃ§Ã£o de boleto, dias Ãºteis e regras do Bacen." },
+  { icon: Building2,   cor: "bg-teal-50 text-teal-600",     label: "Investimentos PJ",      desc: "CDB, Tesouro Direto, LCI e LCA com rendimento lÃ­quido jÃ¡ descontado o IR." },
 ];
 
 const depoimentos = [
-  { nome: "Carlos Mendes", empresa: "Distribuidora Mendes", setor: "Comércio · R$4MM/ano", texto: "Descobri que estava pagando R$2.800/mês a mais na maquininha. Em 10 minutos o Gerente PJ me mostrou qual trocar." },
-  { nome: "Ana Souza",     empresa: "Clínica Bem Estar",    setor: "Saúde · R$1,8MM/ano",  texto: "Finalmente entendi a diferença entre Pronampe e capital de giro. Escolhi a linha certa e economizei R$18k em juros." },
-  { nome: "Roberto Lima",  empresa: "Lima Construções",     setor: "Construção · R$7MM/ano", texto: "Tinha R$120k parado em conta corrente sem render nada. O Gerente PJ me mostrou onde investir com liquidez diária." },
+  { nome: "Carlos Mendes", empresa: "Distribuidora Mendes", setor: "ComÃ©rcio Â· R$4MM/ano", texto: "Descobri que estava pagando R$2.800/mÃªs a mais na maquininha. Em 10 minutos o Gerente PJ me mostrou qual trocar." },
+  { nome: "Ana Souza",     empresa: "ClÃ­nica Bem Estar",    setor: "SaÃºde Â· R$1,8MM/ano",  texto: "Finalmente entendi a diferenÃ§a entre Pronampe e capital de giro. Escolhi a linha certa e economizei R$18k em juros." },
+  { nome: "Roberto Lima",  empresa: "Lima ConstruÃ§Ãµes",     setor: "ConstruÃ§Ã£o Â· R$7MM/ano", texto: "Tinha R$120k parado em conta corrente sem render nada. O Gerente PJ me mostrou onde investir com liquidez diÃ¡ria." },
 ];
 
 const faqs = [
-  { p: "O Meu Gerente PJ substitui meu contador?", r: "Não — e nem quer. O contador cuida de obrigações fiscais e legais. O Gerente PJ resolve as dúvidas financeiras do dia a dia que você não consegue tirar com o contador: comparar taxas, simular crédito, entender regras bancárias e decidir onde investir o caixa." },
-  { p: "Os dados da minha empresa ficam seguros?", r: "Sim. Usamos criptografia em trânsito e em repouso, banco de dados isolado por usuário e seguimos todas as diretrizes da LGPD. Seus dados nunca são compartilhados com bancos ou terceiros." },
-  { p: "A IA pode me dar uma resposta errada?", r: "A IA é treinada com dados financeiros brasileiros atualizados — taxas Selic, CDI, regras Bacen, linhas de crédito. Para decisões de alto valor (acima de R$500k), sempre recomendamos confirmar com um especialista humano." },
-  { p: "Posso cancelar quando quiser?", r: "Sim. Sem fidelidade, sem multa. Cancele a qualquer momento pelo painel — o acesso continua até o fim do período pago." },
+  { p: "O Meu Gerente PJ substitui meu contador?", r: "NÃ£o â e nem quer. O contador cuida de obrigaÃ§Ãµes fiscais e legais. O Gerente PJ resolve as dÃºvidas financeiras do dia a dia que vocÃª nÃ£o consegue tirar com o contador: comparar taxas, simular crÃ©dito, entender regras bancÃ¡rias e decidir onde investir o caixa." },
+  { p: "Os dados da minha empresa ficam seguros?", r: "Sim. Usamos criptografia em trÃ¢nsito e em repouso, banco de dados isolado por usuÃ¡rio e seguimos todas as diretrizes da LGPD. Seus dados nunca sÃ£o compartilhados com bancos ou terceiros." },
+  { p: "A IA pode me dar uma resposta errada?", r: "A IA Ã© treinada com dados financeiros brasileiros atualizados â taxas Selic, CDI, regras Bacen, linhas de crÃ©dito. Para decisÃµes de alto valor (acima de R$500k), sempre recomendamos confirmar com um especialista humano." },
+  { p: "Posso cancelar quando quiser?", r: "Sim. Sem fidelidade, sem multa. Cancele a qualquer momento pelo painel â o acesso continua atÃ© o fim do perÃ­odo pago." },
 ];
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans">
 
-      {/* ── Navbar ─────────────────────────────────────── */}
+      {/* ââ Navbar âââââââââââââââââââââââââââââââââââââââ */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -47,29 +47,29 @@ export default function LandingPage() {
               Entrar no APP
             </Link>
             <Link href="/cadastro" className="bg-[#1B2A4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#243660] transition-colors hidden md:block">
-              Começar grátis
+              ComeÃ§ar grÃ¡tis
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── Hero ───────────────────────────────────────── */}
+      {/* ââ Hero âââââââââââââââââââââââââââââââââââââââââ */}
       <section className="pt-32 pb-20 px-5 md:px-8 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
             <Zap size={11} />
-            IA com experiência de 20+ anos · CEA & CFP · MBA Finanças
+            IA com experiÃªncia de 20+ anos Â· CEA & CFP Â· MBA FinanÃ§as
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-tight tracking-tight mb-6">
             Seu gerente financeiro<br />
             <span className="text-[#1B2A4A]">de bolso</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed mb-8">
-            Simule crédito, compare taxas, tire dúvidas bancárias e descubra onde investir o caixa — tudo em linguagem simples, sem viés de banco, disponível 24h.
+            Simule crÃ©dito, compare taxas, tire dÃºvidas bancÃ¡rias e descubra onde investir o caixa â tudo em linguagem simples, sem viÃ©s de banco, disponÃ­vel 24h.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/cadastro" className="w-full sm:w-auto bg-[#1B2A4A] text-white font-bold px-8 py-4 rounded-xl hover:bg-[#243660] transition-all text-base flex items-center justify-center gap-2 shadow-lg shadow-[#1B2A4A]/20">
-              Começar grátis — sem cartão
+              ComeÃ§ar grÃ¡tis â sem cartÃ£o
               <ArrowRight size={17} />
             </Link>
             <a href="#funcionalidades" className="w-full sm:w-auto text-gray-600 font-medium px-6 py-4 rounded-xl hover:bg-gray-50 transition-colors text-sm border border-gray-200 flex items-center justify-center gap-2">
@@ -77,15 +77,15 @@ export default function LandingPage() {
               <ChevronDown size={15} />
             </a>
           </div>
-          <p className="text-xs text-gray-400 mt-4">Grátis para sempre · Sem cartão · Cancele quando quiser</p>
+          <p className="text-xs text-gray-400 mt-4">GrÃ¡tis para sempre Â· Sem cartÃ£o Â· Cancele quando quiser</p>
         </div>
 
-        {/* Prova social rápida */}
+        {/* Prova social rÃ¡pida */}
         <div className="max-w-2xl mx-auto mt-10 sm:mt-14 grid grid-cols-3 gap-3 sm:gap-6 text-center">
           {[
             { num: "5", label: "Especialistas em 1 plataforma" },
-            { num: "24h", label: "Disponível sempre" },
-            { num: "R$0", label: "Para começar" },
+            { num: "24h", label: "DisponÃ­vel sempre" },
+            { num: "R$0", label: "Para comeÃ§ar" },
           ].map((s) => (
             <div key={s.label}>
               <p className="text-2xl sm:text-3xl font-black text-[#1B2A4A]">{s.num}</p>
@@ -95,15 +95,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Dor do empresário ──────────────────────────── */}
+      {/* ââ Dor do empresÃ¡rio ââââââââââââââââââââââââââââ */}
       <section className="py-16 px-5 md:px-8 bg-[#1B2A4A]">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-blue-300 text-sm font-semibold uppercase tracking-wider mb-4">Você já se perguntou...</p>
+          <p className="text-blue-300 text-sm font-semibold uppercase tracking-wider mb-4">VocÃª jÃ¡ se perguntou...</p>
           <div className="grid md:grid-cols-2 gap-3 text-left">
             {[
-              "\"Minha maquininha cobra 3,2% no crédito. Isso é caro ou normal?\"",
-              "\"Qual a diferença real entre Pronampe e capital de giro?\"",
-              "\"Se pagar o boleto hoje às 18h, compensa amanhã ou segunda?\"",
+              "\"Minha maquininha cobra 3,2% no crÃ©dito. Isso Ã© caro ou normal?\"",
+              "\"Qual a diferenÃ§a real entre Pronampe e capital de giro?\"",
+              "\"Se pagar o boleto hoje Ã s 18h, compensa amanhÃ£ ou segunda?\"",
               "\"Tenho R$80k parado na conta PJ. Onde rende com liquidez?\"",
             ].map((q) => (
               <div key={q} className="bg-white/8 border border-white/10 rounded-xl px-5 py-4">
@@ -112,17 +112,17 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-blue-200 mt-8 text-base">
-            O Meu Gerente PJ responde tudo isso — <strong className="text-white">em segundos, a qualquer hora, sem fila de banco.</strong>
+            O Meu Gerente PJ responde tudo isso â <strong className="text-white">em segundos, a qualquer hora, sem fila de banco.</strong>
           </p>
         </div>
       </section>
 
-      {/* ── Funcionalidades ────────────────────────────── */}
+      {/* ââ Funcionalidades ââââââââââââââââââââââââââââââ */}
       <section id="funcionalidades" className="py-20 px-5 md:px-8 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">5 especialistas em 1"</p>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900">Cada módulo resolve um problema real</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">Cada mÃ³dulo resolve um problema real</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {modulos.map((m) => (
@@ -139,7 +139,7 @@ export default function LandingPage() {
               <div>
                 <p className="text-blue-300 text-xs font-semibold uppercase tracking-wider mb-3">Em breve</p>
                 <h3 className="font-bold text-white mb-2">Open Finance</h3>
-                <p className="text-sm text-blue-200 leading-relaxed">Conecte sua conta bancária e receba análises personalizadas com seus dados reais.</p>
+                <p className="text-sm text-blue-200 leading-relaxed">Conecte sua conta bancÃ¡ria e receba anÃ¡lises personalizadas com seus dados reais.</p>
               </div>
               <Link href="/cadastro" className="mt-6 text-xs font-bold text-blue-300 hover:text-white transition-colors flex items-center gap-1">
                 Entrar na lista de espera <ArrowRight size={12} />
@@ -149,12 +149,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/*  ── Depoimentos ────────────────────────────────── */}
+      {/*  ââ Depoimentos ââââââââââââââââââââââââââââââââââ */}
       <section className="py-20 px-5 md:px-8 bg-slate-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Resultados reais</p>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900">O que os empresários falam</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">O que os empresÃ¡rios falam</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             {depoimentos.map((d) => (
@@ -165,7 +165,7 @@ export default function LandingPage() {
                 <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">"{d.texto}"</p>
                 <div>
                   <p className="font-bold text-gray-900 text-sm">{d.nome}</p>
-                  <p className="text-xs text-gray-400">{empresa} · {d.setor}</p>
+                  <p className="text-xs text-gray-400">{d.empresa} Â· {d.setor}</p>
                 </div>
               </div>
             ))}
@@ -173,18 +173,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Planos ─────────────────────────────────────── */}
+      {/* ââ Planos âââââââââââââââââââââââââââââââââââââââ */}
       <PlanosSection />
 
-      {/* ── Segurança ──────────────────────────────────── */}
+      {/* ââ SeguranÃ§a ââââââââââââââââââââââââââââââââââââ */}
       <section className="py-14 px-5 md:px-8 bg-slate-50 border-y border-gray-100">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
             {[
               { icon: Shield, label: "LGPD", desc: "Dados protegidos por lei" },
-              { icon: Zap,    label: "24/7",  desc: "Disponível sempre" },
-              { icon: Star,   label: "CEA & CFP", desc: "Certificações financeiras" },
-              { icon: CheckCircle, label: "Sem viés", desc: "Independente de bancos" },
+              { icon: Zap,    label: "24/7",  desc: "DisponÃ­vel sempre" },
+              { icon: Star,   label: "CEA & CFP", desc: "CertificaÃ§Ãµes financeiras" },
+              { icon: CheckCircle, label: "Sem viÃ©s", desc: "Independente de bancos" },
             ].map((item) => (
               <div key={item.label} className="flex flex-col items-center gap-2">
                 <div className="w-10 h-10 bg-[#1B2A4A] rounded-xl flex items-center justify-center">
@@ -198,7 +198,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FAQ ────────────────────────────────────────── */}
+      {/* ââ FAQ ââââââââââââââââââââââââââââââââââââââââââ */}
       <section id="faq" className="py-20 px-5 md:px-8 bg-white">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
@@ -215,31 +215,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA Final ──────────────────────────────────── */}
+      {/* ââ CTA Final ââââââââââââââââââââââââââââââââââââ */}
       <section className="py-20 px-5 md:px-8 bg-[#1B2A4A]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-            Seu gerente financeiro está esperando
+            Seu gerente financeiro estÃ¡ esperando
           </h2>
           <p className="text-blue-300 mb-8 leading-relaxed">
-            Comece hoje de graça. Sem cartão, sem burocracia — só você e seu consultor financeiro com IA.
+            Comece hoje de graÃ§a. Sem cartÃ£o, sem burocracia â sÃ³ vocÃª e seu consultor financeiro com IA.
           </p>
           <Link href="/cadastro" className="inline-flex items-center gap-2 bg-white text-[#1B2A4A] font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all text-base shadow-lg">
             Criar conta gratuita
             <ArrowRight size={17} />
           </Link>
-          <p className="text-blue-400/60 text-xs mt-4">Gerente com 20+ anos de experiência · CEA & CFP · Dados protegidos pela LGPD</p>
+          <p className="text-blue-400/60 text-xs mt-4">Gerente com 20+ anos de experiÃªncia Â· CEA & CFP Â· Dados protegidos pela LGPD</p>
         </div>
       </section>
 
-      {/* ── Footer ─────────────────────────────────────── */}
+      {/* ââ Footer âââââââââââââââââââââââââââââââââââââââ */}
       <footer className="py-8 px-5 md:px-8 bg-gray-900">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-md flex items-center justify-center font-black text-white text-[9px]">GP</div>
             <span className="text-gray-400 text-sm font-medium">Meu Gerente PJ</span>
           </div>
-          <p className="text-gray-500 text-xs text-center">© 2025 Meu Gerente PJ. Todos os direitos reservados. · LGPD compliance</p>
+          <p className="text-gray-500 text-xs text-center">Â© 2025 Meu Gerente PJ. Todos os direitos reservados. Â· LGPD compliance</p>
           <div className="flex gap-4 text-xs text-gray-500">
             <Link href="/login" className="hover:text-gray-300 transition-colors">Login</Link>
             <Link href="/cadastro" className="hover:text-gray-300 transition-colors">Cadastrar</Link>
