@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { CheckCircle, Zap, ArrowRight, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle, Zap, ArrowRight, Loader2, Lock } from "lucide-react";
 
 const planos = [
   {
@@ -59,11 +59,19 @@ function formatPreco(v: number) {
   return v.toLocaleString("pt-BR", { minimumFractionDigits: 0 });
 }
 
+const MODULO_NOMES: Record<string, string> = {
+  credito: "Simulador de Crédito",
+  taxas: "Taxas & Tarifas",
+  investimentos: "Investimentos PJ",
+};
+
 export default function UpgradePage() {
   const [ciclo, setCiclo] = useState<"mensal" | "anual">("mensal");
   const [loading, setLoading] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const moduloBloqueado = searchParams.get("modulo");
 
   async function handleAssinar(slug: string) {
     setLoading(slug);
@@ -102,6 +110,13 @@ export default function UpgradePage() {
           </div>
           <h1 className="text-3xl font-black text-gray-900">Escolha seu plano</h1>
           <p className="text-gray-500 mt-2 text-sm">Cancele quando quiser · Sem fidelidade · Sem multa</p>
+
+          {moduloBloqueado && MODULO_NOMES[moduloBloqueado] && (
+            <div className="mt-4 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-2.5 rounded-xl">
+              <Lock size={14} />
+              O módulo <strong>{MODULO_NOMES[moduloBloqueado]}</strong> requer um plano superior
+            </div>
+          )}
 
           {/* Toggle mensal / anual */}
           <div className="flex items-center justify-center gap-3 mt-6">
@@ -248,7 +263,6 @@ export default function UpgradePage() {
             <span className="font-semibold text-gray-500">Formas de pagamento:</span>
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Cartão de crédito</span>
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Pix</span>
-            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Boleto</span>
           </div>
           <span className="hidden sm:block text-gray-300">·</span>
           <span>Renovação automática · Cancele quando quiser</span>
@@ -267,3 +281,4 @@ export default function UpgradePage() {
     </div>
   );
 }
+
