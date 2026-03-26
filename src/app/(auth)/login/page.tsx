@@ -110,12 +110,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-5">
-            Ainda não tem conta?{" "}
-            <Link href="/cadastro" className="text-blue-600 font-semibold hover:underline">
-              Criar conta grátis
+          <div className="mt-5 space-y-3 text-center">
+            <Link
+              href="/recuperar-senha"
+              className="block text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Esqueci minha senha
             </Link>
-          </p>
+            <p className="text-sm text-gray-500">
+              Ainda não tem conta?{" "}
+              <Link href="/cadastro" className="text-blue-600 font-semibold hover:underline">
+                Criar conta grátis
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Rodapé */}
