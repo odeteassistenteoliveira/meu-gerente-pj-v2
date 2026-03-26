@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-gray-50 flex">
 
-      {/* Sidebar Desktop */}
+      {/* ── Sidebar Desktop ─────────────────────────── */}
       <aside className="hidden md:flex flex-col w-56 bg-[#1B2A4A] text-white fixed h-full z-30">
 
         {/* Logo */}
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Upgrade banner */}
+        {/* Upgrade banner (só para Starter) */}
         {plano === "Starter" && (
           <div className="px-2 pb-1">
             <Link
@@ -167,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Mobile Header */}
+      {/* ── Mobile Header ──────────────────────────── */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-[#1B2A4A] text-white z-40 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center font-black text-[10px]">GP</div>
@@ -178,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       </header>
 
-      {/* Mobile Menu */}
+      {/* ── Mobile Menu ─────────────────────────────── */}
       {menuAberto && (
         <div className="md:hidden fixed inset-0 bg-[#1B2A4A] z-30 pt-16 overflow-y-auto">
           <nav className="px-3 py-3 space-y-0.5">
@@ -195,12 +195,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span>{m.label}</span>
               </Link>
             ))}
+
+            {/* Perfil */}
+            <Link
+              href="/perfil"
+              onClick={() => setMenuAberto(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-medium transition-all ${
+                pathname === "/perfil" ? "nav-item-active" : "text-blue-100/80"
+              }`}
+            >
+              <UserCog size={18} />
+              <span>Meu Perfil</span>
+            </Link>
           </nav>
-          <div className="px-3 py-3 border-t border-white/10 mt-2">
+
+          <div className="px-3 py-2 border-t border-white/10 mt-1">
+            {/* Upgrade (só Starter) */}
+            {plano === "Starter" && (
+              <Link
+                href="/upgrade"
+                onClick={() => setMenuAberto(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-400/20 mb-2"
+              >
+                <Zap size={16} className="text-yellow-300 flex-shrink-0" />
+                <div>
+                  <p className="text-[13px] font-bold text-white leading-tight">Fazer upgrade</p>
+                  <p className="text-[11px] text-blue-300/80">Planos a partir de R$97/mês</p>
+                </div>
+              </Link>
+            )}
+
+            {/* Info usuário */}
             {nomeEmpresa && (
-              <div className="px-4 py-3 rounded-xl mb-2">
+              <div className="px-4 py-2.5 rounded-xl mb-1">
                 <p className="text-[12px] font-semibold text-white">{nomeEmpresa}</p>
                 <p className="text-[11px] text-blue-300">{email}</p>
+                <p className="text-[10px] text-blue-400/70 mt-0.5">Plano {plano}</p>
               </div>
             )}
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-blue-200 text-[13px]">
@@ -218,4 +248,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
-
