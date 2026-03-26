@@ -6,21 +6,21 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2, Sparkles, Eye, EyeOff, ChevronRight } from "lucide-react";
 
-/* ── Dados de formulário ─────────────────────────── */
+/* ââ Dados de formulÃ¡rio âââââââââââââââââââââââââââ */
 const setores = [
-  { value: "comercio",    label: "Comércio / Varejo" },
-  { value: "servicos",    label: "Prestação de Serviços" },
-  { value: "industria",   label: "Indústria / Manufatura" },
-  { value: "agronegocio", label: "Agronegócio" },
+  { value: "comercio",    label: "ComÃ©rcio / Varejo" },
+  { value: "servicos",    label: "PrestaÃ§Ã£o de ServiÃ§os" },
+  { value: "industria",   label: "IndÃºstria / Manufatura" },
+  { value: "agronegocio", label: "AgronegÃ³cio" },
   { value: "tecnologia",  label: "Tecnologia / SaaS" },
-  { value: "saude",       label: "Saúde / Farmácia" },
-  { value: "construcao",  label: "Construção Civil" },
-  { value: "educacao",    label: "Educação" },
+  { value: "saude",       label: "SaÃºde / FarmÃ¡cia" },
+  { value: "construcao",  label: "ConstruÃ§Ã£o Civil" },
+  { value: "educacao",    label: "EducaÃ§Ã£o" },
   { value: "outro",       label: "Outro" },
 ];
 
 const faixasFaturamento = [
-  { value: 1000000,  label: "Até R$1MM / ano" },
+  { value: 1000000,  label: "AtÃ© R$1MM / ano" },
   { value: 3000000,  label: "R$1MM a R$3MM / ano" },
   { value: 10000000, label: "R$3MM a R$10MM / ano" },
   { value: 30000000, label: "R$10MM a R$30MM / ano" },
@@ -28,28 +28,28 @@ const faixasFaturamento = [
 
 const opcoesDesafios = [
   "Controle de fluxo de caixa",
-  "Acesso a crédito com juros baixos",
+  "Acesso a crÃ©dito com juros baixos",
   "Taxas altas de maquininha/banco",
   "Onde investir o caixa da empresa",
-  "Planejamento tributário",
-  "Gestão de capital de giro",
+  "Planejamento tributÃ¡rio",
+  "GestÃ£o de capital de giro",
 ];
 
 const opcoesComoConheceu = [
   "Google / pesquisa",
   "Instagram / Facebook",
   "LinkedIn",
-  "Indicação de amigo",
+  "IndicaÃ§Ã£o de amigo",
   "Contador / consultor",
   "Outro",
 ];
 
 const numFuncionarios = [
-  { value: "1",     label: "Só eu (MEI / sócio)" },
-  { value: "2-5",   label: "2 a 5 funcionários" },
-  { value: "6-20",  label: "6 a 20 funcionários" },
-  { value: "21-50", label: "21 a 50 funcionários" },
-  { value: "50+",   label: "Mais de 50 funcionários" },
+  { value: "1",     label: "SÃ³ eu (MEI / sÃ³cio)" },
+  { value: "2-5",   label: "2 a 5 funcionÃ¡rios" },
+  { value: "6-20",  label: "6 a 20 funcionÃ¡rios" },
+  { value: "21-50", label: "21 a 50 funcionÃ¡rios" },
+  { value: "50+",   label: "Mais de 50 funcionÃ¡rios" },
 ];
 
 type Etapa = "conta" | "empresa" | "perfil" | "pronto";
@@ -60,11 +60,11 @@ const etapasLabel: Record<string, string> = {
   perfil: "Perfil",
 };
 
-/* ── Componente principal ────────────────────────── */
+/* ââ Componente principal ââââââââââââââââââââââââââ */
 export default function CadastroPage() {
   const [etapa, setEtapa] = useState<Etapa>("conta");
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState("");
+  const [erro, setErro] = useState(""); const [userId, setUserId] = useState<string | null>(null);
   const [verSenha, setVerSenha] = useState(false);
   const router = useRouter();
 
@@ -72,7 +72,7 @@ export default function CadastroPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
-  // Etapa 2 — Empresa
+  // Etapa 2 â Empresa
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [cpfSocio, setCpfSocio] = useState("");
@@ -84,7 +84,7 @@ export default function CadastroPage() {
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
 
-  // Etapa 3 — Perfil financeiro
+  // Etapa 3 â Perfil financeiro
   const [setor, setSetor] = useState("servicos");
   const [faturamento, setFaturamento] = useState(3000000);
   const [regime, setRegime] = useState("simples_nacional");
@@ -121,20 +121,12 @@ export default function CadastroPage() {
     const { data: signUpData, error } = await supabase.auth.signUp({ email, password: senha });
     if (error) {
       setErro(error.message.includes("already registered")
-        ? "Este email já está cadastrado. Faça login."
+        ? "Este email jÃ¡ estÃ¡ cadastrado. FaÃ§a login."
         : "Erro ao criar conta. Tente novamente.");
       setCarregando(false); return;
     }
-    // Se não veio sessão (confirmação de email ativa), faz login imediato
-    if (!signUpData.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: senha });
-      if (signInError) {
-        setErro("Conta criada! Verifique seu email para confirmar antes de continuar.");
-        setCarregando(false); return;
-      }
-    }
-    setCarregando(false);
-    setEtapa("empresa");
+    // Se nÃ£o veio sessÃ£o (confirmaÃ§Ã£o de email ativa), faz login imediato
+    if (!signUpData.session) { const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: senha }); if (signInError) { setErro("Conta criada! Verifique seu email para confirmar antes de continuar."); setCarregando(false); return; } setUserId(signInData.user?.id ?? signUpData.user?.id ?? null); } else { setUserId(signUpData.user?.id ?? null); } setCarregando(false); setEtapa("empresa");
   }
 
   async function handleSalvarEmpresa(e: React.FormEvent) {
@@ -146,11 +138,10 @@ export default function CadastroPage() {
     e.preventDefault();
     setErro(""); setCarregando(true);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setErro("Sessão expirada. Faça login novamente."); setCarregando(false); return; }
+    if (!userId) { setCarregando(false); return; }
 
     const { error } = await supabase.from("empresas").insert({
-      user_id: user.id,
+      user_id: userId,
       nome_fantasia: nomeFantasia,
       cnpj: cnpj.replace(/\D/g, "") || null,
       cpf_socio: cpfSocio.replace(/\D/g, "") || null,
@@ -173,12 +164,12 @@ export default function CadastroPage() {
 
     if (error) { setErro("Erro ao salvar dados. Tente novamente."); setCarregando(false); return; }
 
-    // Enviar email de boas-vindas (fire and forget — não bloqueia o fluxo)
+    // Enviar email de boas-vindas (fire and forget â nÃ£o bloqueia o fluxo)
     try {
       fetch("/api/email/welcome", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, nomeEmpresa: nomeFantasia }),
+        body: JSON.stringify({ email: email, nomeEmpresa: nomeFantasia }),
       }).catch(() => {}); // silencia erros de rede
     } catch (_) {}
 
@@ -201,7 +192,7 @@ export default function CadastroPage() {
           <h1 className="text-lg font-bold text-white">Meu Gerente PJ</h1>
           <div className="flex items-center justify-center gap-1.5 mt-1">
             <Sparkles size={11} className="text-blue-300" />
-            <p className="text-xs text-blue-300">Comece grátis — sem cartão</p>
+            <p className="text-xs text-blue-300">Comece grÃ¡tis â sem cartÃ£o</p>
           </div>
         </div>
 
@@ -215,7 +206,7 @@ export default function CadastroPage() {
                   i < etapaIdx ? "bg-green-400 text-white" :
                   "bg-white/15 text-white/40"
                 }`}>
-                  {i < etapaIdx ? "✓" : i + 1}
+                  {i < etapaIdx ? "â" : i + 1}
                   <span className="hidden sm:inline">{etapasLabel[e]}</span>
                 </div>
                 {i < etapasOrdem.length - 1 && (
@@ -229,7 +220,7 @@ export default function CadastroPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-6">
 
-          {/* ── Etapa 1: Conta ── */}
+          {/* ââ Etapa 1: Conta ââ */}
           {etapa === "conta" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-5">Criar sua conta</h2>
@@ -241,7 +232,7 @@ export default function CadastroPage() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Senha</label>
                   <div className="relative">
-                    <input type={verSenha ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" className="input-base pr-10" />
+                    <input type={verSenha ? "text" : "password"} value={senha} onChange={(e) => setSenha(e.target.value)} required minLength={6} placeholder="MÃ­nimo 6 caracteres" className="input-base pr-10" />
                     <button type="button" onClick={() => setVerSenha(!verSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {verSenha ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
@@ -253,27 +244,27 @@ export default function CadastroPage() {
                   {carregando ? "Criando conta..." : "Continuar"}
                 </button>
               </form>
-              <p className="text-center text-sm text-gray-500 mt-4">Já tem conta? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Entrar</Link></p>
+              <p className="text-center text-sm text-gray-500 mt-4">JÃ¡ tem conta? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Entrar</Link></p>
             </>
           )}
 
-          {/* ── Etapa 2: Empresa ── */}
+          {/* ââ Etapa 2: Empresa ââ */}
           {etapa === "empresa" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-1">Dados da empresa</h2>
-              <p className="text-xs text-gray-400 mb-5">Campos marcados com * são obrigatórios</p>
+              <p className="text-xs text-gray-400 mb-5">Campos marcados com * sÃ£o obrigatÃ³rios</p>
               <form onSubmit={handleSalvarEmpresa} className="space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Nome da empresa *</label>
-                    <input type="text" value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} required placeholder="Nome fantasia ou razão social" className="input-base" />
+                    <input type="text" value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} required placeholder="Nome fantasia ou razÃ£o social" className="input-base" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CNPJ</label>
                     <input type="text" value={cnpj} onChange={(e) => setCnpj(formatarCNPJ(e.target.value))} placeholder="00.000.000/0001-00" className="input-base" inputMode="numeric" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CPF do sócio</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">CPF do sÃ³cio</label>
                     <input type="text" value={cpfSocio} onChange={(e) => setCpfSocio(e.target.value)} placeholder="000.000.000-00" className="input-base" inputMode="numeric" />
                   </div>
                   <div>
@@ -286,7 +277,7 @@ export default function CadastroPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Cidade</label>
-                    <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="São Paulo" className="input-base" />
+                    <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="SÃ£o Paulo" className="input-base" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Estado</label>
@@ -300,11 +291,11 @@ export default function CadastroPage() {
                 </div>
 
                 <div className="border-t border-gray-100 pt-3.5">
-                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2.5">Presença digital <span className="text-gray-400 font-normal normal-case tracking-normal">(opcional)</span></p>
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2.5">PresenÃ§a digital <span className="text-gray-400 font-normal normal-case tracking-normal">(opcional)</span></p>
                   <div className="space-y-2.5">
-                    <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="🌐 Site: https://suaempresa.com.br" className="input-base" />
-                    <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="📸 Instagram: @suaempresa" className="input-base" />
-                    <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="💼 LinkedIn: linkedin.com/company/..." className="input-base" />
+                    <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} placeholder="ð Site: https://suaempresa.com.br" className="input-base" />
+                    <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="ð¸ Instagram: @suaempresa" className="input-base" />
+                    <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="ð¼ LinkedIn: linkedin.com/company/..." className="input-base" />
                   </div>
                 </div>
 
@@ -315,11 +306,11 @@ export default function CadastroPage() {
             </>
           )}
 
-          {/* ── Etapa 3: Perfil financeiro ── */}
+          {/* ââ Etapa 3: Perfil financeiro ââ */}
           {etapa === "perfil" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-1">Perfil financeiro</h2>
-              <p className="text-xs text-gray-400 mb-5">Isso personaliza as respostas do consultor para o seu negócio.</p>
+              <p className="text-xs text-gray-400 mb-5">Isso personaliza as respostas do consultor para o seu negÃ³cio.</p>
               <form onSubmit={handleSalvarPerfil} className="space-y-3.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -329,7 +320,7 @@ export default function CadastroPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Funcionários</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">FuncionÃ¡rios</label>
                     <select value={numFunc} onChange={(e) => setNumFunc(e.target.value)} className="input-base">
                       {numFuncionarios.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                     </select>
@@ -341,7 +332,7 @@ export default function CadastroPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Regime tributário</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Regime tributÃ¡rio</label>
                     <select value={regime} onChange={(e) => setRegime(e.target.value)} className="input-base">
                       <option value="mei">MEI</option>
                       <option value="simples_nacional">Simples Nacional</option>
@@ -361,7 +352,7 @@ export default function CadastroPage() {
                             ? "border-blue-500 bg-blue-50 text-blue-700 font-medium"
                             : "border-gray-200 text-gray-600 hover:border-gray-300"
                         }`}>
-                        {desafios.includes(d) ? "✓ " : ""}{d}
+                        {desafios.includes(d) ? "â " : ""}{d}
                       </button>
                     ))}
                   </div>
@@ -403,14 +394,14 @@ export default function CadastroPage() {
             </>
           )}
 
-          {/* ── Etapa 4: Pronto ── */}
+          {/* ââ Etapa 4: Pronto ââ */}
           {etapa === "pronto" && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={36} className="text-green-500" />
               </div>
               <h2 className="font-bold text-gray-900 text-lg mb-2">Tudo pronto!</h2>
-              <p className="text-sm text-gray-500 leading-relaxed">Seu Gerente PJ está configurado e pronto para te ajudar.</p>
+              <p className="text-sm text-gray-500 leading-relaxed">Seu Gerente PJ estÃ¡ configurado e pronto para te ajudar.</p>
               <div className="flex items-center justify-center gap-1.5 mt-4">
                 <Loader2 size={12} className="animate-spin text-gray-400" />
                 <p className="text-xs text-gray-400">Abrindo o painel...</p>
@@ -420,7 +411,7 @@ export default function CadastroPage() {
         </div>
 
         <p className="text-center text-xs text-blue-400/60 mt-5">
-          Gerente com 20+ anos de experiência · CEA & CFP · Dados protegidos pela LGPD
+          Gerente com 20+ anos de experiÃªncia Â· CEA & CFP Â· Dados protegidos pela LGPD
         </p>
       </div>
     </div>
