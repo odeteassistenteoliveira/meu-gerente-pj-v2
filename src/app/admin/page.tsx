@@ -33,6 +33,7 @@ type Empresa = {
   principais_desafios: string[] | null;
   como_conheceu: string | null;
   plano: string | null;
+  perfil_completo: boolean | null;
   created_at: string;
   user_email?: string;
 };
@@ -90,10 +91,15 @@ function EmpresaCard({ e, expanded, onToggle }: { e: Empresa; expanded: boolean;
             </div>
             <div>
               <p className="font-semibold text-gray-900 text-sm">{e.nome_fantasia || "—"}</p>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                   e.plano === "pro" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"
                 }`}>{e.plano || "starter"}</span>
+                {e.perfil_completo ? (
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700">✓ Completo</span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-100 text-amber-700">⚠ Incompleto</span>
+                )}
                 <span className="text-[11px] text-gray-400">{formatDate(e.created_at)}</span>
               </div>
             </div>
@@ -205,12 +211,14 @@ export default function AdminPage() {
   const comCNPJ = empresas.filter(e => e.cnpj).length;
   const comContato = empresas.filter(e => e.telefone || e.whatsapp).length;
   const comRedes = empresas.filter(e => e.instagram || e.linkedin).length;
+  const comPerfilCompleto = empresas.filter(e => e.perfil_completo).length;
 
   function exportCSV() {
-    const headers = ["Nome", "CNPJ", "Telefone", "WhatsApp", "Cidade", "Estado", "Setor", "Faturamento", "Funcionários", "Instagram", "LinkedIn", "Site", "Como conheceu", "Desafios", "Plano", "Cadastro"];
+    const headers = ["Nome", "CNPJ", "CPF do sócio", "Telefone", "WhatsApp", "Cidade", "Estado", "Setor", "Faturamento", "Funcionários", "Instagram", "LinkedIn", "Site", "Como conheceu", "Desafios", "Perfil", "Plano", "Cadastro"];
     const rows = filtradas.map(e => [
       e.nome_fantasia || "",
       e.cnpj || "",
+      e.cpf_socio || "",
       e.telefone || "",
       e.whatsapp || "",
       e.cidade || "",
@@ -223,6 +231,7 @@ export default function AdminPage() {
       e.site_url || "",
       e.como_conheceu || "",
       (e.principais_desafios || []).join("; "),
+      e.perfil_completo ? "Completo" : "Incompleto",
       e.plano || "starter",
       formatDate(e.created_at),
     ].map(v => `"${v}"`));
@@ -298,11 +307,12 @@ export default function AdminPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           <StatCard icon={Users} label="Total cadastrado" value={totalEmpresas} color="bg-[#1B2A4A]" />
           <StatCard icon={Building2} label="Com CNPJ informado" value={comCNPJ} color="bg-blue-500" />
           <StatCard icon={Phone} label="Com telefone/WhatsApp" value={comContato} color="bg-green-500" />
           <StatCard icon={TrendingUp} label="Com redes sociais" value={comRedes} color="bg-purple-500" />
+          <StatCard icon={CheckCircle2} label="Perfil completo" value={comPerfilCompleto} color="bg-emerald-500" />
         </div>
 
         {/* Filters + Export */}
@@ -405,6 +415,7 @@ export default function AdminPage() {
                     <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Faturamento</th>
                     <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Redes</th>
                     <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Cadastro</th>
+                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Perfil</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -447,6 +458,19 @@ export default function AdminPage() {
                           </td>
                           <td className="px-4 py-3"><p className="text-gray-500 text-[12px] whitespace-nowrap">{formatDate(e.created_at)}</p></td>
                           <td className="px-4 py-3">
+                            {e.perfil_completo ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold">
+                                <CheckCircle2 size={12} />
+                                Completo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
+                                <span className="text-sm">⚠</span>
+                                Incompleto
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
                             <button onClick={() => setExpandedRow(expanded ? null : e.id)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                               {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                             </button>
@@ -454,7 +478,7 @@ export default function AdminPage() {
                         </tr>
                         {expanded && (
                           <tr key={`${e.id}-detail`} className="bg-blue-50/30">
-                            <td colSpan={9} className="px-6 py-4">
+                            <td colSpan={10} className="px-6 py-4">
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[12px]">
                                 <div><p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Regime tributário</p><p className="text-gray-700">{e.regime || "—"}</p></div>
                                 <div><p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Funcionários</p><p className="text-gray-700">{e.num_funcionarios || "—"}</p></div>
@@ -482,4 +506,4 @@ export default function AdminPage() {
       </div>
     </div>
   );
-}
+    }
