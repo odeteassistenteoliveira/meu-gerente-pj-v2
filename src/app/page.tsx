@@ -42,9 +42,11 @@ export default function LandingPage() {
             <a href="#planos" className="hover:text-gray-900 transition-colors">Planos</a>
             <a href="#faq" className="hover:text-gray-900 transition-colors">FAQ</a>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors hidden md:block">Entrar</Link>
-            <Link href="/cadastro" className="bg-[#1B2A4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#243660] transition-colors">
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">
+              Entrar no APP
+            </Link>
+            <Link href="/cadastro" className="bg-[#1B2A4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#243660] transition-colors hidden md:block">
               Começar grátis
             </Link>
           </div>
@@ -119,7 +121,7 @@ export default function LandingPage() {
       <section id="funcionalidades" className="py-20 px-5 md:px-8 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">5 especialistas em 1</p>
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">5 especialistas em 1"</p>
             <h2 className="text-3xl md:text-4xl font-black text-gray-900">Cada módulo resolve um problema real</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -147,7 +149,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Depoimentos ────────────────────────────────── */}
+      {/*  ── Depoimentos ────────────────────────────────── */}
       <section className="py-20 px-5 md:px-8 bg-slate-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -163,7 +165,7 @@ export default function LandingPage() {
                 <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">"{d.texto}"</p>
                 <div>
                   <p className="font-bold text-gray-900 text-sm">{d.nome}</p>
-                  <p className="text-xs text-gray-400">{d.empresa} · {d.setor}</p>
+                  <p className="text-xs text-gray-400">{empresa} · {d.setor}</p>
                 </div>
               </div>
             ))}
