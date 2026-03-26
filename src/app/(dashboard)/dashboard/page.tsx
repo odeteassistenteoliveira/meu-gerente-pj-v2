@@ -7,6 +7,7 @@ import {
   ArrowRight, Sparkles, MessageSquare
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import PWAInstallButton from "@/components/PWAInstallButton";
 
 const modulos = [
   {
@@ -100,11 +101,12 @@ export default function DashboardPage() {
       {/* Hero strip */}
       <div className="bg-[#1B2A4A] px-6 md:px-10 pt-8 pb-12">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 mb-3">
             <span className="flex items-center gap-1.5 bg-white/10 border border-white/20 text-blue-200 text-xs font-medium px-3 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               Consultor disponível agora
             </span>
+            <PWAInstallButton />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
             {getSaudacao()}{primeiroNome ? `, ${primeiroNome}` : ""}!
