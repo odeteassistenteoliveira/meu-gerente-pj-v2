@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  User, Building2, Phone, Globe, Instagram, Linkedin,
+  User, Building2, Globe, Instagram, Linkedin,
   Save, Loader2, CheckCircle2, MapPin, Briefcase,
-  BadgeDollarSign, Users2, BookOpen, Sparkles
+  Sparkles, CreditCard, AlertTriangle, X, Crown, Zap, Star, CalendarCheck
 } from "lucide-react";
 
-/* ── Opções de selects ─────────────────────────── */
+/* Opções de selects */
 const setores = [
   { value: "comercio",    label: "Comércio / Varejo" },
   { value: "servicos",    label: "Prestação de Serviços" },
@@ -58,7 +60,7 @@ const UFs = [
   "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"
 ];
 
-/* ── Masks ─────────────────────────────────────── */
+/* Masks */
 function formatarCNPJ(v: string) {
   return v.replace(/\D/g, "").slice(0, 14)
     .replace(/^(\d{2})(\d)/, "$1.$2")
@@ -80,7 +82,7 @@ function formatarCPF(v: string) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
-/* ── Section wrapper ───────────────────────────── */
+/* Section wrapper */
 function Section({ icon: Icon, title, subtitle, children }: {
   icon: any; title: string; subtitle: string; children: React.ReactNode;
 }) {
@@ -100,7 +102,7 @@ function Section({ icon: Icon, title, subtitle, children }: {
   );
 }
 
-/* ── Page ──────────────────────────────────────── */
+/* Page */
 export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -128,6 +130,15 @@ export default function PerfilPage() {
   const [numFunc, setNumFunc] = useState("1");
   const [temContador, setTemContador] = useState(false);
   const [desafios, setDesafios] = useState<string[]>([]);
+
+  // Assinatura
+  const [plano, setPlano] = useState("starter");
+  const [planoCiclo, setPlanoCiclo] = useState<string | null>(null);
+  const [planoValidade, setPlanoValidade] = useState<string | null>(null);
+  const [asaasSubscriptionId, setAsaasSubscriptionId] = useState<string | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function load() {
@@ -160,6 +171,11 @@ export default function PerfilPage() {
         setNumFunc(data.num_funcionarios ?? "1");
         setTemContador(data.tem_contador ?? false);
         setDesafios(data.principais_desafios ?? []);
+        // Assinatura
+        setPlano(data.plano ?? "starter");
+        setPlanoCiclo(data.plano_ciclo ?? null);
+        setPlanoValidade(data.plano_validade ?? null);
+        setAsaasSubscriptionId(data.asaas_subscription_id ?? null);
       }
       setLoading(false);
     }
@@ -210,6 +226,45 @@ export default function PerfilPage() {
     );
   }
 
+  async function handleCancelarPlano() {
+    setCancelando(true);
+    try {
+      const res = await fetch("/api/cancelar-plano", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        setErro(json.error ?? "Erro ao cancelar assinatura.");
+      } else {
+        setPlano("starter");
+        setPlanoCiclo(null);
+        setPlanoValidade(null);
+        setAsaasSubscriptionId(null);
+        setShowCancelModal(false);
+      }
+    } catch {
+      setErro("Erro de conexão ao cancelar. Tente novamente.");
+    } finally {
+      setCancelando(false);
+    }
+  }
+
+  // Helpers de exibição do plano
+  const PLANO_CONFIG: Record<string, { label: string; cor: string; icon: any }> = {
+    starter:      { label: "Starter",      cor: "bg-gray-100 text-gray-600 border-gray-200",          icon: Zap     },
+    pro:          { label: "Pro",          cor: "bg-blue-50 text-blue-700 border-blue-200",            icon: Crown   },
+    essencial:    { label: "Essencial",    cor: "bg-purple-50 text-purple-700 border-purple-200",      icon: Star    },
+    profissional: { label: "Profissional", cor: "bg-amber-50 text-amber-700 border-amber-200",         icon: Crown   },
+  };
+  const planoInfo = PLANO_CONFIG[plano] ?? PLANO_CONFIG.starter;
+  const PlanoIcon = planoInfo.icon;
+  const isAtivo = plano !== "starter" && !!asaasSubscriptionId;
+
+  function formatarData(iso: string | null) {
+    if (!iso) return null;
+    return new Date(iso).toLocaleDateString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric",
+    });
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -257,7 +312,128 @@ export default function PerfilPage() {
         </div>
       )}
 
+      {/* Modal de cancelamento */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 bg-red-50 rounded-xl">
+                <AlertTriangle size={20} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[15px] text-gray-900">Cancelar assinatura?</h3>
+                <p className="text-[11px] text-gray-400">Essa ação não pode ser desfeita</p>
+              </div>
+              <button onClick={() => setShowCancelModal(false)} className="ml-auto p-1 hover:bg-gray-100 rounded-lg">
+                <X size={16} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-5 space-y-2">
+              <p className="text-sm text-red-700">Ao cancelar, você perde imediatamente o acesso a:</p>
+              <ul className="text-[12px] text-red-600 space-y-1 ml-1">
+                <li>- Módulos exclusivos do plano {planoInfo.label}</li>
+                <li>- Simulações e análises ilimitadas</li>
+                <li>- Histórico de conversas avançado</li>
+              </ul>
+              <p className="text-[12px] text-red-600 font-medium">Seu plano voltará para o Starter (gratuito).</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 text-sm rounded-xl hover:bg-gray-200 transition-colors font-medium"
+              >
+                Manter plano
+              </button>
+              <button
+                onClick={handleCancelarPlano}
+                disabled={cancelando}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm rounded-xl hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+              >
+                {cancelando ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={14} className="animate-spin" /> Cancelando...
+                  </span>
+                ) : "Confirmar cancelamento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 space-y-5">
+
+        {/* Minha Assinatura */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-xl">
+              <CreditCard size={16} className="text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-bold text-[14px] text-gray-900">Minha Assinatura</h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">Gerencie seu plano e pagamentos</p>
+            </div>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border ${planoInfo.cor}`}>
+              <PlanoIcon size={12} />
+              {planoInfo.label}
+            </div>
+          </div>
+          <div className="p-6">
+            {plano === "starter" ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Zap size={20} className="text-gray-400" />
+                </div>
+                <h3 className="font-bold text-gray-900 text-[15px]">Plano Starter (Gratuito)</h3>
+                <p className="text-[13px] text-gray-500 mt-1 max-w-sm mx-auto">
+                  Você está usando o plano gratuito com acesso limitado. Faça upgrade para desbloquear todos os módulos.
+                </p>
+                <Link
+                  href="/upgrade"
+                  className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-[#1B2A4A] text-white text-sm rounded-xl hover:bg-[#243660] transition-colors font-medium"
+                >
+                  <Zap size={14} />
+                  Ver planos e fazer upgrade
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-gray-50 rounded-xl p-3.5">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Plano</p>
+                    <p className="text-[14px] font-bold text-gray-900">{planoInfo.label}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3.5">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Ciclo</p>
+                    <p className="text-[14px] font-bold text-gray-900">{planoCiclo === "anual" ? "Anual" : "Mensal"}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3.5">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Renova em</p>
+                    <p className="text-[14px] font-bold text-gray-900 flex items-center gap-1.5">
+                      <CalendarCheck size={13} className="text-green-500" />
+                      {formatarData(planoValidade) ?? "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100">
+                  <Link
+                    href="/upgrade"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1B2A4A] text-white text-sm rounded-xl hover:bg-[#243660] transition-colors font-medium"
+                  >
+                    <Crown size={14} />
+                    Alterar plano
+                  </Link>
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 text-sm rounded-xl hover:bg-red-50 transition-colors font-medium"
+                  >
+                    Cancelar assinatura
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Conta */}
         <Section icon={User} title="Conta" subtitle="Seu acesso à plataforma">
@@ -420,3 +596,4 @@ export default function PerfilPage() {
     </div>
   );
 }
+
