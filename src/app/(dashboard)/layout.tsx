@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-gray-50 flex">
 
-      {/* ── Sidebar Desktop ─────────────────────────── */}
+      {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-56 bg-[#1B2A4A] text-white fixed h-full z-30">
 
         {/* Logo */}
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Upgrade banner (só para Starter) */}
+        {/* Upgrade banner */}
         {plano === "Starter" && (
           <div className="px-2 pb-1">
             <Link
@@ -141,7 +141,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Footer */}
         <div className="px-2 py-3 border-t border-white/10 space-y-1">
-          {/* Usuário */}
           <div className="px-3 py-2.5 rounded-lg bg-white/6 flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-blue-500/40 flex items-center justify-center text-[11px] font-bold text-blue-100 flex-shrink-0">
               {iniciais}
@@ -168,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* ── Mobile Header ──────────────────────────── */}
+      {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-[#1B2A4A] text-white z-40 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center font-black text-[10px]">GP</div>
@@ -179,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       </header>
 
-      {/* ── Mobile Menu ─────────────────────────────── */}
+      {/* Mobile Menu */}
       {menuAberto && (
         <div className="md:hidden fixed inset-0 bg-[#1B2A4A] z-30 pt-16 overflow-y-auto">
           <nav className="px-3 py-3 space-y-0.5">
