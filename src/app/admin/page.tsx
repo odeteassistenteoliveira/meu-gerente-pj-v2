@@ -7,7 +7,7 @@ import {
   Users, Building2, TrendingUp, Search, Download,
   ExternalLink, Instagram, Linkedin, Globe,
   ChevronDown, ChevronUp, Sparkles, LogOut,
-  CheckCircle2, XCircle, Phone, Mail
+  CheckCircle2, XCircle, Phone, Mail, ArrowLeft
 } from "lucide-react";
 
 const ADMIN_EMAIL = "renankz@gmail.com";
@@ -268,13 +268,21 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-1.5 text-blue-200/70 hover:text-white text-xs transition-colors"
+          >
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Dashboard</span>
+          </button>
+          <span className="text-blue-800/40 hidden sm:block">|</span>
           <span className="text-[11px] text-blue-300 hidden sm:block">renankz@gmail.com</span>
           <button
             onClick={handleLogout}
             className="flex items-center gap-1.5 text-blue-200/70 hover:text-white text-xs transition-colors"
           >
             <LogOut size={14} />
-            Sair
+            <span className="hidden sm:inline">Sair</span>
           </button>
         </div>
       </header>
