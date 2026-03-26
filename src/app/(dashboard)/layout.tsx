@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Calculator, CreditCard, Building2, TrendingUp, Landmark,
-  LayoutDashboard, LogOut, Menu, X, Sparkles, ShieldCheck, UserCog, Zap
+  LayoutDashboard, LogOut, Menu, X, Sparkles, ShieldCheck, UserCog, Zap, MessageSquarePlus
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -141,6 +141,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Footer */}
         <div className="px-2 py-3 border-t border-white/10 space-y-1">
+          {/* Usuário */}
           <div className="px-3 py-2.5 rounded-lg bg-white/6 flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-blue-500/40 flex items-center justify-center text-[11px] font-bold text-blue-100 flex-shrink-0">
               {iniciais}
@@ -245,6 +246,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 md:ml-56 pt-14 md:pt-0 min-h-screen">
         {children}
       </main>
+
+      {/* Botão flutuante de feedback */}
+      <a
+        href={`mailto:renankz@gmail.com?subject=Feedback%20Meu%20Gerente%20PJ&body=Ol%C3%A1%20Renan%2C%0A%0AQuero%20compartilhar%20um%20feedback%3A%0A%0A`}
+        title="Enviar feedback"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#1B2A4A] text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-[#243660] transition-all hover:scale-105 active:scale-95 group"
+      >
+        <MessageSquarePlus size={14} className="text-blue-300" />
+        <span className="hidden sm:inline">Enviar feedback</span>
+      </a>
     </div>
   );
 }
