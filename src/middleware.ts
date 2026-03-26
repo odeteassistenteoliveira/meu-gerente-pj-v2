@@ -1,15 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// -- Mapa de acesso: quais modulos cada plano libera
-const MODULOS_POR_PLANO: Record<string, string[]> = {
-  starter:      ["/dashboard", "/calculadora", "/bancario"],
-  pro:          ["/dashboard", "/calculadora", "/bancario", "/credito", "/taxas"],
-  essencial:    ["/dashboard", "/calculadora", "/bancario", "/credito", "/taxas", "/investimentos"],
-  profissional: ["/dashboard", "/calculadora", "/bancario", "/credito", "/taxas", "/investimentos"],
-};
+// Todos os planos têm acesso a todos os módulos.
+// O controle de uso (limite de mensagens) é feito na API /api/registrar-mensagem.
 
-// Grace period: dias apos vencimento antes do corte
+// Grace period: dias após vencimento antes do corte
 const GRACE_PERIOD_DAYS = 7;
 
 export async function middleware(request: NextRequest) {
@@ -32,18 +27,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh da sessao
   const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Rotas que requerem login
   const rotasProtegidas = ["/dashboard", "/calculadora", "/taxas", "/credito", "/bancario", "/investimentos"];
   const rotasLivres = ["/login", "/cadastro", "/completar-perfil", "/upgrade", "/perfil", "/plano-expirado"];
   const estaEmRotaProtegida = rotasProtegidas.some((r) => pathname.startsWith(r));
   const estaEmRotaLivre = rotasLivres.some((r) => pathname.startsWith(r));
 
-  // 1. Redireciona para login se nao autenticado
   if (estaEmRotaProtegida && !user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
@@ -51,14 +43,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. Se ja logado e tentando acessar login/cadastro, redireciona para dashboard
   if ((pathname === "/login" || pathname === "/cadastro") && user) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);
   }
 
-  // 3. Verificar perfil completo + plano para rotas protegidas
   if (user && estaEmRotaProtegida) {
     const { data: empresa } = await supabase
       .from("empresas")
@@ -66,7 +56,6 @@ export async function middleware(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    // 3a. Perfil incompleto
     if (empresa && empresa.perfil_completo === false) {
       const completarPerfilUrl = request.nextUrl.clone();
       completarPerfilUrl.pathname = "/completar-perfil";
@@ -77,7 +66,6 @@ export async function middleware(request: NextRequest) {
       const plano = empresa.plano ?? "starter";
       const planoStatus = empresa.plano_status ?? "ativo";
 
-      // 3b. Plano inadimplente - checar grace period
       if (planoStatus === "inadimplente" && plano !== "starter") {
         const validade = empresa.plano_validade ? new Date(empresa.plano_validade) : null;
         const agora = new Date();
@@ -94,7 +82,6 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      // 3c. Plano cancelado tentando acessar modulo pago
       if (planoStatus === "cancelado" && plano !== "starter") {
         if (pathname !== "/dashboard") {
           const expiradoUrl = request.nextUrl.clone();
@@ -103,18 +90,6 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      // 3d. Gate de features por plano
-      if (planoStatus === "ativo" || planoStatus === "pendente") {
-        const modulosLiberados = MODULOS_POR_PLANO[plano] ?? MODULOS_POR_PLANO.starter;
-        const tentandoAcessar = rotasProtegidas.find((r) => pathname.startsWith(r));
-
-        if (tentandoAcessar && !modulosLiberados.includes(tentandoAcessar)) {
-          const upgradeUrl = request.nextUrl.clone();
-          upgradeUrl.pathname = "/upgrade";
-          upgradeUrl.searchParams.set("modulo", tentandoAcessar.replace("/", ""));
-          return NextResponse.redirect(upgradeUrl);
-        }
-      }
     }
   }
 
