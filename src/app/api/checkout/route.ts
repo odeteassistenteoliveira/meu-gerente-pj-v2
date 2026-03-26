@@ -20,7 +20,7 @@ async function asaasRequest(path: string, method: string, body?: object) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
-  if (!text.trim()) return { errors: [{ description: `HTTP ${res.status} — resposta vazia. Verifique a ASAAS_API_KEY.` }] };
+  if (!text.trim()) return { errors: [{ description: `HTTP ${res.status} — resposta vazia.` }] };
   try { return JSON.parse(text); }
   catch { return { errors: [{ description: `HTTP ${res.status} — resposta inválida: ${text.slice(0, 300)}` }] }; }
 }
@@ -37,19 +37,28 @@ export async function POST(req: NextRequest) {
     if (!PLANOS[plano]) return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
 
     const { data: empresa } = await supabase
-      .from("empresas").select("id, nome_fantasia, cnpj, asaas_customer_id")
-      .eq("user_id", user.id).single();
+      .from("empresas")
+      .select("id, nome_fantasia, cnpj, cpf_socio, asaas_customer_id")
+      .eq("user_id", user.id)
+      .single();
+
+    // CPF/CNPJ obrigatorio no Asaas para criar assinatura
+    const cpfCnpj = (empresa?.cnpj ?? empresa?.cpf_socio ?? "").replace(/\D/g, "");
+    if (!cpfCnpj) {
+      return NextResponse.json(
+        { error: "CPF ou CNPJ obrigatorio para assinar. Acesse 'Minha Empresa' e preencha seu CPF ou CNPJ." },
+        { status: 400 }
+      );
+    }
 
     let customerId = empresa?.asaas_customer_id as string | null;
 
     if (!customerId) {
-      const customerBody: Record<string, string> = {
+      const customer = await asaasRequest("/customers", "POST", {
         name: empresa?.nome_fantasia ?? user.email ?? "Cliente",
         email: user.email ?? "",
-        cpfCnpj: (empresa?.cnpj ?? "").replace(/\D/g, ""),
-      };
-      Object.keys(customerBody).forEach((k) => { if (!customerBody[k]) delete customerBody[k]; });
-      const customer = await asaasRequest("/customers", "POST", customerBody);
+        cpfCnpj,
+      });
       if (customer.errors || !customer.id) {
         console.error("Asaas customer error:", customer);
         return NextResponse.json({ error: "Erro ao criar cliente no gateway", detail: customer.errors }, { status: 502 });
@@ -63,10 +72,12 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
     const subscription = await asaasRequest("/subscriptions", "POST", {
-      customer: customerId, billingType: "UNDEFINED",
-      cycle: ciclo === "anual" ? "YEARLY" : "MONTHLY", value: valor,
+      customer: customerId,
+      billingType: "UNDEFINED",
+      cycle: ciclo === "anual" ? "YEARLY" : "MONTHLY",
+      value: valor,
       nextDueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-      description: `Meu Gerente PJ — Plano ${planoInfo.nome} (${ciclo})`,
+      description: `Meu Gerente PJ - Plano ${planoInfo.nome} (${ciclo})`,
       externalReference: `${user.id}|${plano}|${ciclo}`,
       redirectUrl: `${appUrl}/dashboard?upgrade=success`,
     });
@@ -77,7 +88,9 @@ export async function POST(req: NextRequest) {
     }
 
     await supabase.from("empresas").update({
-      asaas_subscription_id: subscription.id, plano_pendente: plano, plano_ciclo: ciclo,
+      asaas_subscription_id: subscription.id,
+      plano_pendente: plano,
+      plano_ciclo: ciclo,
     }).eq("id", empresa?.id);
 
     const payments = await asaasRequest(`/subscriptions/${subscription.id}/payments`, "GET");
@@ -88,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     if (!paymentUrl) {
       console.error("Asaas: sem link de pagamento", payments);
-      return NextResponse.json({ error: "Link de pagamento não disponível. Tente novamente." }, { status: 502 });
+      return NextResponse.json({ error: "Link de pagamento nao disponivel. Tente novamente." }, { status: 502 });
     }
 
     return NextResponse.json({ paymentUrl, subscriptionId: subscription.id });
@@ -96,4 +109,4 @@ export async function POST(req: NextRequest) {
     console.error("Checkout error:", err);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
-}
+                                                                                                          }
