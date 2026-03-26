@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
 
   // Rotas protegidas: redireciona para login se não autenticado
   const rotasProtegidas = ["/dashboard", "/calculadora", "/taxas", "/credito", "/bancario", "/investimentos"];
+  const rotasExcludas = ["/login", "/cadastro", "/completar-perfil", "/upgrade", "/perfil"];
   const estaEmRotaProtegida = rotasProtegidas.some((r) => pathname.startsWith(r));
 
   if (estaEmRotaProtegida && !user) {
@@ -42,6 +43,21 @@ export async function middleware(request: NextRequest) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);
+  }
+
+  // Verificar perfil completo para rotas protegidas
+  if (user && estaEmRotaProtegida && !pathname.startsWith("/completar-perfil")) {
+    const { data: empresa } = await supabase
+      .from("empresas")
+      .select("perfil_completo")
+      .eq("user_id", user.id)
+      .single();
+
+    if (empresa && empresa.perfil_completo === false) {
+      const completarPerfilUrl = request.nextUrl.clone();
+      completarPerfilUrl.pathname = "/completar-perfil";
+      return NextResponse.redirect(completarPerfilUrl);
+    }
   }
 
   return supabaseResponse;
