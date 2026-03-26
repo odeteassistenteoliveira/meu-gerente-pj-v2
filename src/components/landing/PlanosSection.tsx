@@ -14,9 +14,9 @@ const planosBase = [
     descricao: "Para conhecer sem compromisso",
     economia: null,
     features: [
-      "10 consultas/mês na Calculadora",
-      "10 consultas/mês no Especialista Bancário",
-      "Sem cartão de crédito",
+      "5 perguntas totais para experimentar",
+      "Acesso a todos os 5 agentes",
+      "Sem cartão de crédito necessário",
     ],
     cta: "Começar grátis",
     destaque: false,
@@ -214,7 +214,6 @@ export default function PlanosSection() {
             <span className="font-semibold text-gray-500">Formas de pagamento:</span>
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Cartão de crédito</span>
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Pix</span>
-            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Boleto</span>
           </div>
           <span className="hidden sm:block text-gray-300">·</span>
           <span>Renovação automática · Cancele quando quiser</span>
