@@ -86,7 +86,7 @@ function UpgradeContent() {
 
       if (!res.ok || !data.paymentUrl) {
         if (data.cnpjAusente) {
-          setErro("Preencha seu CNPJ no perfil antes de assinar. Acesse Configurações → Perfil.");
+          setErro("Preencha seu CPF ou CNPJ no perfil antes de assinar. Acesse Configurações → Perfil.");
         } else {
           setErro(data.error ?? "Erro ao iniciar pagamento. Tente novamente.");
         }
@@ -94,7 +94,6 @@ function UpgradeContent() {
         return;
       }
 
-      // Redireciona para a página de pagamento do Asaas
       window.location.href = data.paymentUrl;
     } catch {
       setErro("Falha de conexão. Tente novamente.");
