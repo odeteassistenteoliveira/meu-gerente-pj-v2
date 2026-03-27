@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const LIMITE_STARTER = 5;
+const LIMITE_STARTER = 10;
 
 export async function POST() {
   try {
