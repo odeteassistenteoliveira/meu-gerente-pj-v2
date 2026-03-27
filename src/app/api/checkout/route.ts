@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// -- Configuracao Asaas
+// ── Configuração Asaas ─────────────────────────────────
 const ASAAS_BASE_URL = process.env.ASAAS_SANDBOX === "true"
   ? "https://sandbox.asaas.com/api/v3"
   : "https://api.asaas.com/api/v3";
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
 
-// -- Tabela de precos
+// ── Tabela de preços ───────────────────────────────────
 const PLANOS: Record<string, { nome: string; mensal: number; anual: number }> = {
   pro:           { nome: "Pro",          mensal:  97,  anual:  970 },
   essencial:     { nome: "Essencial",    mensal: 197,  anual: 1970 },
@@ -28,8 +28,9 @@ async function asaasRequest(path: string, method: string, body?: object) {
   const text = await res.text();
 
   if (!text.trim()) {
+    // Asaas retornou corpo vazio — geralmente erro de autenticação (401/403)
     return {
-      errors: [{ description: `HTTP ${res.status} - resposta vazia. Verifique a ASAAS_API_KEY.` }],
+      errors: [{ description: `HTTP ${res.status} — resposta vazia. Verifique a ASAAS_API_KEY.` }],
     };
   }
 
@@ -37,39 +38,39 @@ async function asaasRequest(path: string, method: string, body?: object) {
     return JSON.parse(text);
   } catch {
     return {
-      errors: [{ description: `HTTP ${res.status} - resposta invalida: ${text.slice(0, 300)}` }],
+      errors: [{ description: `HTTP ${res.status} — resposta inválida: ${text.slice(0, 300)}` }],
     };
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verifica se ASAAS_API_KEY esta configurada
+    // 1. Verifica se ASAAS_API_KEY está configurada
     if (!ASAAS_API_KEY) {
       return NextResponse.json(
-        { error: "Pagamentos nao configurados. Configure ASAAS_API_KEY no .env.local." },
+        { error: "Pagamentos não configurados. Configure ASAAS_API_KEY no .env.local." },
         { status: 503 }
       );
     }
 
-    // 2. Autentica o usuario
+    // 2. Autentica o usuário
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    // 3. Le o corpo da requisicao
+    // 3. Lê o corpo da requisição
     const { plano, ciclo } = await req.json() as { plano: string; ciclo: "mensal" | "anual" };
 
     if (!PLANOS[plano]) {
-      return NextResponse.json({ error: "Plano invalido" }, { status: 400 });
+      return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
     // 4. Busca dados da empresa
     const { data: empresa } = await supabase
       .from("empresas")
-      .select("id, nome_fantasia, cnpj, cpf_socio, asaas_customer_id")
+      .select("id, nome_fantasia, cnpj, asaas_customer_id")
       .eq("user_id", user.id)
       .single();
 
@@ -77,37 +78,39 @@ export async function POST(req: NextRequest) {
     let customerId = empresa?.asaas_customer_id as string | null;
 
     if (!customerId) {
-      const cpfCnpj = (empresa?.cnpj ?? empresa?.cpf_socio ?? "").replace(/\D/g, "");
+      const cnpjLimpo = (empresa?.cnpj ?? "").replace(/\D/g, "");
 
-      if (!cpfCnpj) {
+      // cpfCnpj é obrigatório no Asaas — bloqueia antes de chamar a API
+      if (!cnpjLimpo) {
         return NextResponse.json(
-          { error: "CPF ou CNPJ necessario para criar assinatura. Preencha no seu perfil." },
-          { status: 400 }
+          { error: "Complete seu perfil com o CNPJ antes de assinar um plano.", cnpjAusente: true },
+          { status: 422 }
         );
       }
 
       const customerBody: Record<string, string> = {
         name: empresa?.nome_fantasia ?? user.email ?? "Cliente",
         email: user.email ?? "",
-        cpfCnpj: cpfCnpj,
+        cpfCnpj: cnpjLimpo,
       };
 
-      Object.keys(customerBody).forEach((k) => {
-        if (!customerBody[k]) delete customerBody[k];
-      });
+      // Remove campos opcionais vazios
+      if (!customerBody.email) delete customerBody.email;
 
       const customer = await asaasRequest("/customers", "POST", customerBody);
 
       if (customer.errors || !customer.id) {
-        console.error("Asaas customer error:", customer);
+        console.error("Asaas customer error:", JSON.stringify(customer));
+        const asaasMsg = customer.errors?.[0]?.description ?? "Erro desconhecido no gateway";
         return NextResponse.json(
-          { error: "Erro ao criar cliente no gateway de pagamento", detail: customer.errors },
+          { error: `Erro no gateway: ${asaasMsg}`, detail: customer.errors },
           { status: 502 }
         );
       }
 
       customerId = customer.id as string;
 
+      // Salva o customer ID no banco
       await supabase
         .from("empresas")
         .update({ asaas_customer_id: customerId })
@@ -123,19 +126,20 @@ export async function POST(req: NextRequest) {
 
     const subscription = await asaasRequest("/subscriptions", "POST", {
       customer: customerId,
-      billingType: "UNDEFINED", // Cartao e Pix (boleto desabilitado no painel Asaas)
+      billingType: "UNDEFINED",
       cycle: cicloAsaas,
       value: valor,
       nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: `Meu Gerente PJ - Plano ${planoInfo.nome} (${ciclo})`,
+      description: `Meu Gerente PJ — Plano ${planoInfo.nome} (${ciclo})`,
       externalReference: `${user.id}|${plano}|${ciclo}`,
       redirectUrl: `${appUrl}/dashboard?upgrade=success`,
     });
 
     if (subscription.errors || !subscription.id) {
-      console.error("Asaas subscription error:", subscription);
+      console.error("Asaas subscription error:", JSON.stringify(subscription));
+      const asaasMsg = subscription.errors?.[0]?.description ?? "Erro desconhecido";
       return NextResponse.json(
-        { error: "Erro ao criar assinatura", detail: subscription.errors },
+        { error: `Erro ao criar assinatura: ${asaasMsg}`, detail: subscription.errors },
         { status: 502 }
       );
     }
@@ -151,7 +155,7 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", empresa?.id);
 
-    // 8. Busca o link de pagamento da primeira cobranca
+    // 8. Busca o link de pagamento da primeira cobrança
     const payments = await asaasRequest(
       `/subscriptions/${subscription.id}/payments`,
       "GET"
@@ -159,6 +163,7 @@ export async function POST(req: NextRequest) {
 
     const firstPayment = payments?.data?.[0];
 
+    // URL base de acordo com o ambiente
     const asaasWebBase = process.env.ASAAS_SANDBOX === "true"
       ? "https://sandbox.asaas.com"
       : "https://www.asaas.com";
@@ -168,9 +173,9 @@ export async function POST(req: NextRequest) {
       ?? (firstPayment?.id ? `${asaasWebBase}/c/${firstPayment.id}` : null);
 
     if (!paymentUrl) {
-      console.error("Asaas: nenhum link de pagamento disponivel", payments);
+      console.error("Asaas: nenhum link de pagamento disponível", JSON.stringify(payments));
       return NextResponse.json(
-        { error: "Link de pagamento nao disponivel. Tente novamente em instantes." },
+        { error: "Link de pagamento não disponível. Tente novamente em instantes." },
         { status: 502 }
       );
     }
