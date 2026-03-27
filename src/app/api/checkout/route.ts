@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 // ── Configuração Asaas ─────────────────────────────────
 const ASAAS_BASE_URL = process.env.ASAAS_SANDBOX === "true"
   ? "https://sandbox.asaas.com/api/v3"
-  : "https://api.asaas.com/api/v3";
+  : "https://www.asaas.com/api/v3";
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
 
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         cpfCnpj: cnpjLimpo,
       };
 
-      // Remove campos opcionais vazios
+      // Remove campos opcionais vazios (name e email não devem ser removidos)
       if (!customerBody.email) delete customerBody.email;
 
       const customer = await asaasRequest("/customers", "POST", customerBody);
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
         console.error("Asaas customer error:", JSON.stringify(customer));
         const asaasMsg = customer.errors?.[0]?.description ?? "Erro desconhecido no gateway";
         return NextResponse.json(
-          { error: `Erro no gateway: ${asaasMsg}`, detail: customer.errors },
+          { error: `Erro ao criar cliente no Asaas: ${asaasMsg}`, detail: customer.errors },
           { status: 502 }
         );
       }
@@ -136,10 +136,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (subscription.errors || !subscription.id) {
-      console.error("Asaas subscription error:", JSON.stringify(subscription));
-      const asaasMsg = subscription.errors?.[0]?.description ?? "Erro desconhecido";
+      console.error("Asaas subscription error:", subscription);
       return NextResponse.json(
-        { error: `Erro ao criar assinatura: ${asaasMsg}`, detail: subscription.errors },
+        { error: "Erro ao criar assinatura", detail: subscription.errors },
         { status: 502 }
       );
     }
@@ -173,7 +172,7 @@ export async function POST(req: NextRequest) {
       ?? (firstPayment?.id ? `${asaasWebBase}/c/${firstPayment.id}` : null);
 
     if (!paymentUrl) {
-      console.error("Asaas: nenhum link de pagamento disponível", JSON.stringify(payments));
+      console.error("Asaas: nenhum link de pagamento disponível", payments);
       return NextResponse.json(
         { error: "Link de pagamento não disponível. Tente novamente em instantes." },
         { status: 502 }
