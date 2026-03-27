@@ -150,9 +150,13 @@ export default function ChatInterface({
   }
 
   async function copiarTexto(texto, id) {
-    await navigator.clipboard.writeText(texto);
-    setCopiado(id);
-    setTimeout(() => setCopiado(null), 2000);
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(id);
+      setTimeout(() => setCopiado(null), 2000);
+    } catch {
+      // clipboard não disponível — ignora silenciosamente
+    }
   }
 
   function compartilharWhatsApp(texto) {
@@ -257,7 +261,7 @@ export default function ChatInterface({
                     <Share2 size={11} /> Compartilhar
                   </button>
                   <button
-                    onClick={() => copiarTexto(msg.content, msg.id)}
+                    onClick={() => copiarTexto(msg.content, msg.id).catch(() => {})}
                     className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-full px-2 py-0.5 shadow-sm transition-colors"
                   >
                     {copiado === msg.id ? (
