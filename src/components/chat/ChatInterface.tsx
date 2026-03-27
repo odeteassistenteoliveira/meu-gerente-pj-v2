@@ -47,7 +47,7 @@ export default function ChatInterface({
       const check = await fetch("/api/registrar-mensagem", { method: "POST" });
       const checkData = await check.json();
 
-      if (!check.ok || checkData.error === "limite_atingido") {
+      if (check.status === 403 || checkData.error === "limite_atingido") {
         setLimiteBloqueado(true);
         setMensagensRestantes(0);
         return;
@@ -93,7 +93,8 @@ export default function ChatInterface({
       const decoder = new TextDecoder();
       let acumulado = "";
 
-      while (true) {
+      let encerrado = false;
+      while (!encerrado) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -103,7 +104,10 @@ export default function ChatInterface({
         for (const linha of linhas) {
           if (linha.startsWith("data: ")) {
             const dado = linha.slice(6).trim();
-            if (dado === "[DONE]") break;
+            if (dado === "[DONE]") {
+              encerrado = true;
+              break;
+            }
             try {
               const parsed = JSON.parse(dado);
               if (parsed.text) {
@@ -141,7 +145,7 @@ export default function ChatInterface({
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      enviar(input);
+      enviar(input).catch(() => {});
     }
   }
 
@@ -198,7 +202,7 @@ export default function ChatInterface({
                 {sugestoesIniciais.map((s, i) => (
                   <button
                     key={i}
-                    onClick={() => enviar(s)}
+                    onClick={() => enviar(s).catch(() => {})}
                     className="suggestion-chip text-left"
                   >
                     <span className="text-gray-400 mr-2 font-mono text-[11px]">↗</span>
@@ -348,7 +352,7 @@ export default function ChatInterface({
             }}
           />
           <button
-            onClick={() => enviar(input)}
+            onClick={() => enviar(input).catch(() => {})}
             disabled={!input.trim() || carregando || limiteBloqueado}
             className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
               input.trim() && !carregando && !limiteBloqueado
