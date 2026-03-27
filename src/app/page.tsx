@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrackVisit from "@/components/TrackVisit";
 import {
   Calculator, CreditCard, TrendingUp, Landmark, Building2,
   ArrowRight, Star, Shield, Zap, ChevronDown, CheckCircle
