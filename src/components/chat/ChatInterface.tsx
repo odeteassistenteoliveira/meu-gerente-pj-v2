@@ -259,7 +259,7 @@ export default function ChatInterface({
               <Lock size={15} className="text-amber-500 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-amber-800 leading-tight">Limite do plano gratuito atingido</p>
-                <p className="text-xs text-amber-600 leading-tight mt-0.5">Você usou suas 5 perguntas. Faça upgrade para continuar.</p>
+                <p className="text-xs text-amber-600 leading-tight mt-0.5">Você usou suas 10 perguntas. Faça upgrade para continuar.</p>
               </div>
             </div>
             <Link
