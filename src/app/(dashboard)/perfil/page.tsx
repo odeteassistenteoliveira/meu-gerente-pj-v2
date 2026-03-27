@@ -10,7 +10,7 @@ import {
   Sparkles, CreditCard, AlertTriangle, X, Crown, Zap, Star, CalendarCheck
 } from "lucide-react";
 
-/* Opções de selects */
+/* ── Opções de selects ─────────────────────────── */
 const setores = [
   { value: "comercio",    label: "Comércio / Varejo" },
   { value: "servicos",    label: "Prestação de Serviços" },
@@ -32,10 +32,10 @@ const faixasFaturamento = [
 ];
 
 const regimes = [
-  { value: "simples",       label: "Simples Nacional" },
+  { value: "simples",         label: "Simples Nacional" },
   { value: "lucro_presumido", label: "Lucro Presumido" },
-  { value: "lucro_real",    label: "Lucro Real" },
-  { value: "mei",           label: "MEI" },
+  { value: "lucro_real",      label: "Lucro Real" },
+  { value: "mei",             label: "MEI" },
 ];
 
 const numFuncionarios = [
@@ -60,7 +60,7 @@ const UFs = [
   "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"
 ];
 
-/* Masks */
+/* ── Masks ─────────────────────────────────────── */
 function formatarCNPJ(v: string) {
   return v.replace(/\D/g, "").slice(0, 14)
     .replace(/^(\d{2})(\d)/, "$1.$2")
@@ -82,7 +82,7 @@ function formatarCPF(v: string) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
-/* Section wrapper */
+/* ── Section wrapper ───────────────────────────── */
 function Section({ icon: Icon, title, subtitle, children }: {
   icon: any; title: string; subtitle: string; children: React.ReactNode;
 }) {
@@ -102,7 +102,7 @@ function Section({ icon: Icon, title, subtitle, children }: {
   );
 }
 
-/* Page */
+/* ── Page ──────────────────────────────────────── */
 export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,42 +142,47 @@ export default function PerfilPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setEmail(user.email ?? "");
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
+        setEmail(user.email ?? "");
 
-      const { data } = await supabase
-        .from("empresas")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+        const { data } = await supabase
+          .from("empresas")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
-      if (data) {
-        setEmpresaId(data.id);
-        setNomeFantasia(data.nome_fantasia ?? "");
-        setCnpj(data.cnpj ?? "");
-        setCpfSocio(data.cpf_socio ?? "");
-        setTelefone(data.telefone ?? "");
-        setWhatsapp(data.whatsapp ?? "");
-        setCidade(data.cidade ?? "");
-        setEstado(data.estado ?? "");
-        setSiteUrl(data.site_url ?? "");
-        setInstagramVal(data.instagram ?? "");
-        setLinkedinVal(data.linkedin ?? "");
-        setSetor(data.setor ?? "comercio");
-        setFaturamento(data.faturamento ?? "");
-        setRegime(data.regime ?? "");
-        setNumFunc(data.num_funcionarios ?? "1");
-        setTemContador(data.tem_contador ?? false);
-        setDesafios(data.principais_desafios ?? []);
-        // Assinatura
-        setPlano(data.plano ?? "starter");
-        setPlanoCiclo(data.plano_ciclo ?? null);
-        setPlanoValidade(data.plano_validade ?? null);
-        setAsaasSubscriptionId(data.asaas_subscription_id ?? null);
+        if (data) {
+          setEmpresaId(data.id);
+          setNomeFantasia(data.nome_fantasia ?? "");
+          setCnpj(data.cnpj ?? "");
+          setCpfSocio(data.cpf_socio ?? "");
+          setTelefone(data.telefone ?? "");
+          setWhatsapp(data.whatsapp ?? "");
+          setCidade(data.cidade ?? "");
+          setEstado(data.estado ?? "");
+          setSiteUrl(data.site_url ?? "");
+          setInstagramVal(data.instagram ?? "");
+          setLinkedinVal(data.linkedin ?? "");
+          setSetor(data.setor ?? "comercio");
+          setFaturamento(data.faturamento ?? "");
+          setRegime(data.regime ?? "");
+          setNumFunc(data.num_funcionarios ?? "1");
+          setTemContador(data.tem_contador ?? false);
+          setDesafios(data.principais_desafios ?? []);
+          // Assinatura
+          setPlano(data.plano ?? "starter");
+          setPlanoCiclo(data.plano_ciclo ?? null);
+          setPlanoValidade(data.plano_validade ?? null);
+          setAsaasSubscriptionId(data.asaas_subscription_id ?? null);
+        }
+      } catch {
+        // erro silencioso — mostra perfil vazio
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, []);
@@ -247,7 +252,7 @@ export default function PerfilPage() {
     }
   }
 
-  // Helpers de exibição do plano
+  // ── Helpers de exibição do plano ──────────────────
   const PLANO_CONFIG: Record<string, { label: string; cor: string; icon: any }> = {
     starter:      { label: "Starter",      cor: "bg-gray-100 text-gray-600 border-gray-200",          icon: Zap     },
     pro:          { label: "Pro",          cor: "bg-blue-50 text-blue-700 border-blue-200",            icon: Crown   },
@@ -256,7 +261,6 @@ export default function PerfilPage() {
   };
   const planoInfo = PLANO_CONFIG[plano] ?? PLANO_CONFIG.starter;
   const PlanoIcon = planoInfo.icon;
-  const isAtivo = plano !== "starter" && !!asaasSubscriptionId;
 
   function formatarData(iso: string | null) {
     if (!iso) return null;
@@ -312,7 +316,7 @@ export default function PerfilPage() {
         </div>
       )}
 
-      {/* Modal de cancelamento */}
+      {/* ── Modal de cancelamento ───────────────────── */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -362,7 +366,7 @@ export default function PerfilPage() {
 
       <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 space-y-5">
 
-        {/* Minha Assinatura */}
+        {/* ── Minha Assinatura ──────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-xl">
@@ -379,6 +383,7 @@ export default function PerfilPage() {
           </div>
           <div className="p-6">
             {plano === "starter" ? (
+              /* ── Plano gratuito ── */
               <div className="text-center py-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
                   <Zap size={20} className="text-gray-400" />
@@ -396,6 +401,7 @@ export default function PerfilPage() {
                 </Link>
               </div>
             ) : (
+              /* ── Plano pago ── */
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-gray-50 rounded-xl p-3.5">
@@ -415,6 +421,7 @@ export default function PerfilPage() {
                   </div>
                 </div>
 
+                {/* Botões de ação */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100">
                   <Link
                     href="/upgrade"
@@ -596,4 +603,3 @@ export default function PerfilPage() {
     </div>
   );
 }
-
