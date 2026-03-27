@@ -47,37 +47,34 @@ export default function ChatInterface({
       const check = await fetch("/api/registrar-mensagem", { method: "POST" });
       const checkData = await check.json();
 
+      // Apenas bloqueia no caso de limite atingido (403) — outros erros de infra permitem envio
       if (check.status === 403 || checkData.error === "limite_atingido") {
         setLimiteBloqueado(true);
         setMensagensRestantes(0);
         return;
       }
 
-      if (checkData.remaining !== -1) {
+      if (checkData.remaining !== undefined && checkData.remaining !== -1) {
         setMensagensRestantes(checkData.remaining);
       }
     } catch {
       // Se falhar a checagem, permite o envio (fail open)
     }
 
-    const novaMensagemUser: Mensagem = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: texto.trim(),
-    };
-
-    const historico = [...mensagens, novaMensagemUser];
-    setMensagens(historico);
-    setInput("");
-    setCarregando(true);
-
     const idAssistant = crypto.randomUUID();
-    setMensagens((prev) => [
-      ...prev,
-      { id: idAssistant, role: "assistant", content: "" },
-    ]);
 
     try {
+      const novaMensagemUser: Mensagem = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: texto.trim(),
+      };
+
+      const historico = [...mensagens, novaMensagemUser];
+      setMensagens([...historico, { id: idAssistant, role: "assistant", content: "" }]);
+      setInput("");
+      setCarregando(true);
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,12 +85,13 @@ export default function ChatInterface({
       });
 
       if (!res.ok) throw new Error("Erro na API");
+      if (!res.body) throw new Error("Resposta sem corpo");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acumulado = "";
-
       let encerrado = false;
+
       while (!encerrado) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -131,7 +129,7 @@ export default function ChatInterface({
             ? {
                 ...m,
                 content:
-                  "Desculpe, ocorreu um erro ao processar sua pergunta. Verifique a chave da API e tente novamente.",
+                  "Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em instantes.",
               }
             : m
         )
@@ -142,14 +140,14 @@ export default function ChatInterface({
     }
   }, [mensagens, carregando, modulo, limiteBloqueado]);
 
-  function handleKeyDown(e) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       enviar(input).catch(() => {});
     }
   }
 
-  async function copiarTexto(texto, id) {
+  async function copiarTexto(texto: string, id: string) {
     try {
       await navigator.clipboard.writeText(texto);
       setCopiado(id);
@@ -159,7 +157,7 @@ export default function ChatInterface({
     }
   }
 
-  function compartilharWhatsApp(texto) {
+  function compartilharWhatsApp(texto: string) {
     const textoLimpo = texto
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/`(.*?)`/g, '$1')
@@ -309,6 +307,7 @@ export default function ChatInterface({
           </div>
         )}
 
+        {/* Aviso de mensagens restantes (starter, ainda tem saldo) */}
         {!limiteBloqueado && mensagensRestantes !== null && mensagensRestantes >= 0 && (
           <div className="mb-2.5 flex items-center justify-between">
             <p className="text-[11px] text-amber-600 font-medium">
@@ -350,7 +349,7 @@ export default function ChatInterface({
             }`}
             style={{ minHeight: "46px" }}
             onInput={(e) => {
-              const t = e.target;
+              const t = e.target as HTMLTextAreaElement;
               t.style.height = "auto";
               t.style.height = Math.min(t.scrollHeight, 128) + "px";
             }}
@@ -384,79 +383,116 @@ export default function ChatInterface({
   );
 }
 
-function MensagemConteudo({ texto, isUser }) {
+// ── Renderizador de markdown ──────────────────────── */
+function MensagemConteudo({ texto, isUser }: { texto: string; isUser: boolean }) {
   if (isUser) {
     return <p className="whitespace-pre-wrap">{texto}</p>;
   }
 
-  const linhas = texto.split("\n");
+  try {
+    const linhas = (texto || "").split("\n");
 
-  return (
-    <div className="space-y-1.5">
-      {linhas.map((linha, i) => {
-        if (linha.startsWith("---")) {
-          return <hr key={i} className="border-gray-100 my-2" />;
-        }
-        if (linha.startsWith("|")) {
-          return (
-            <code key={i} className="block font-mono text-xs bg-gray-50 border border-gray-200 rounded px-2 py-0.5 overflow-x-auto">
-              {linha}
-            </code>
-          );
-        }
-        if (linha.startsWith("## ")) {
-          return (
-            <p key={i} className="font-bold text-[15px] text-gray-900 mt-3 mb-1">
-              {formatarInline(linha.slice(3))}
-            </p>
-          );
-        }
-        if (linha.startsWith("### ")) {
-          return (
-            <p key={i} className="font-semibold text-[13px] text-gray-800 mt-2">
-              {formatarInline(linha.slice(4))}
-            </p>
-          );
-        }
-        const matchNum = linha.match(/^(\d+)\.\s(.+)/);
-        if (matchNum) {
-          return (
-            <div key={i} className="flex gap-2.5 pl-1">
-              <span className="text-gray-400 font-semibold text-xs mt-0.5 w-4 flex-shrink-0">{matchNum[1]}.</span>
-              <p className="text-sm leading-relaxed">{formatarInline(matchNum[2])}</p>
-            </div>
-          );
-        }
-        if (linha.startsWith("- ") || linha.startsWith("* ")) {
-          return (
-            <div key={i} className="flex gap-2.5 pl-1">
-              <span className="text-gray-400 mt-1.5 flex-shrink-0">•</span>
-              <p className="text-sm leading-relaxed">{formatarInline(linha.slice(2))}</p>
-            </div>
-          );
-        }
-        if (linha.trim() === "") {
-          return <div key={i} className="h-1" />;
-        }
-        return (
-          <p key={i} className="text-sm leading-relaxed">
-            {formatarInline(linha)}
-          </p>
-        );
-      })}
-    </div>
-  );
+    return (
+      <div className="space-y-1.5">
+        {linhas.map((linha, i) => {
+          try {
+            // Bloco de código triplo
+            if (linha.startsWith("```")) {
+              const lang = linha.slice(3).trim();
+              return (
+                <code key={i} className="block font-mono text-xs bg-gray-50 border border-gray-200 rounded px-2 py-0.5 overflow-x-auto text-gray-700">
+                  {lang || ""}
+                </code>
+              );
+            }
+            // Linha separadora
+            if (linha.startsWith("---")) {
+              return <hr key={i} className="border-gray-100 my-2" />;
+            }
+            // Tabela markdown
+            if (linha.startsWith("|")) {
+              return (
+                <code key={i} className="block font-mono text-xs bg-gray-50 border border-gray-200 rounded px-2 py-0.5 overflow-x-auto">
+                  {linha}
+                </code>
+              );
+            }
+            // Título ##
+            if (linha.startsWith("## ")) {
+              return (
+                <p key={i} className="font-bold text-[15px] text-gray-900 mt-3 mb-1">
+                  {formatarInline(linha.slice(3))}
+                </p>
+              );
+            }
+            // Título ###
+            if (linha.startsWith("### ")) {
+              return (
+                <p key={i} className="font-semibold text-[13px] text-gray-800 mt-2">
+                  {formatarInline(linha.slice(4))}
+                </p>
+              );
+            }
+            // Lista numerada
+            const matchNum = linha.match(/^(\d+)\.\s(.+)/);
+            if (matchNum) {
+              return (
+                <div key={i} className="flex gap-2.5 pl-1">
+                  <span className="text-gray-400 font-semibold text-xs mt-0.5 w-4 flex-shrink-0">{matchNum[1]}.</span>
+                  <p className="text-sm leading-relaxed">{formatarInline(matchNum[2])}</p>
+                </div>
+              );
+            }
+            // Lista com bullet
+            if (linha.startsWith("- ") || linha.startsWith("* ")) {
+              return (
+                <div key={i} className="flex gap-2.5 pl-1">
+                  <span className="text-gray-400 mt-1.5 flex-shrink-0">•</span>
+                  <p className="text-sm leading-relaxed">{formatarInline(linha.slice(2))}</p>
+                </div>
+              );
+            }
+            // Linha vazia
+            if (linha.trim() === "") {
+              return <div key={i} className="h-1" />;
+            }
+            // Texto normal
+            return (
+              <p key={i} className="text-sm leading-relaxed">
+                {formatarInline(linha)}
+              </p>
+            );
+          } catch {
+            return <p key={i} className="text-sm leading-relaxed">{linha}</p>;
+          }
+        })}
+      </div>
+    );
+  } catch {
+    return <p className="whitespace-pre-wrap text-sm leading-relaxed">{texto}</p>;
+  }
 }
 
-function formatarInline(texto) {
-  const partes = texto.split(/(\*\*.*?\*\*|`.*?`)/g);
-  return partes.map((p, i) => {
-    if (p.startsWith("**") && p.endsWith("**")) {
-      return React.createElement('strong', { key: i, className: "font-semibold text-gray-900" }, p.slice(2, -2));
-    }
-    if (p.startsWith("`") && p.endsWith("`")) {
-      return React.createElement('code', { key: i, className: "bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-[12px] font-mono" }, p.slice(1, -1));
-    }
-    return p;
-  });
+function formatarInline(texto: string): React.ReactNode {
+  try {
+    if (!texto) return null;
+    // Remove backtick triplos que sobram
+    const textoLimpo = texto.replace(/```[\s\S]*?```/g, (m) => m.replace(/`/g, ""));
+    const partes = textoLimpo.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+    return partes.map((p, i) => {
+      if (p.length >= 4 && p.startsWith("**") && p.endsWith("**")) {
+        return <strong key={i} className="font-semibold text-gray-900">{p.slice(2, -2)}</strong>;
+      }
+      if (p.length >= 3 && p.startsWith("`") && p.endsWith("`")) {
+        return (
+          <code key={i} className="bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-[12px] font-mono">
+            {p.slice(1, -1)}
+          </code>
+        );
+      }
+      return <span key={i}>{p}</span>;
+    });
+  } catch {
+    return <span>{texto}</span>;
   }
+}
