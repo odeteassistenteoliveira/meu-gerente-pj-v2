@@ -14,7 +14,7 @@ const planosBase = [
     descricao: "Para conhecer sem compromisso",
     economia: null,
     features: [
-      "5 perguntas totais para experimentar",
+      "10 perguntas totais para experimentar",
       "Acesso a todos os 5 agentes",
       "Sem cartão de crédito necessário",
     ],
