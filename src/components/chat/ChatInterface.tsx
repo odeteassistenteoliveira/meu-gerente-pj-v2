@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, RotateCcw, Copy, Check, Sparkles, Zap, Lock } from "lucide-react";
+import { Send, Loader2, RotateCcw, Copy, Check, Sparkles, Zap, Lock, Share2 } from "lucide-react";
 import Link from "next/link";
 import type { ModuloIA } from "@/types";
 
@@ -89,7 +89,7 @@ export default function ChatInterface({
 
       if (!res.ok) throw new Error("Erro na API");
 
-      const reader = res.body!.getReader();
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acumulado = "";
 
@@ -138,17 +138,31 @@ export default function ChatInterface({
     }
   }, [mensagens, carregando, modulo, limiteBloqueado]);
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       enviar(input);
     }
   }
 
-  async function copiarTexto(texto: string, id: string) {
+  async function copiarTexto(texto, id) {
     await navigator.clipboard.writeText(texto);
     setCopiado(id);
     setTimeout(() => setCopiado(null), 2000);
+  }
+
+  function compartilharWhatsApp(texto) {
+    const textoLimpo = texto
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/^#{1,3}\s/gm, '')
+      .replace(/^[-*]\s/gm, '• ')
+      .trim();
+    const preview = textoLimpo.length > 500
+      ? textoLimpo.substring(0, 497) + '...'
+      : textoLimpo;
+    const mensagem = `💼 *Meu Gerente PJ* me ajudou com isso:\n\n${preview}\n\n👉 Experimente grátis: https://meu-gerente-pj.vercel.app`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
   }
 
   function limparConversa() {
@@ -160,11 +174,12 @@ export default function ChatInterface({
   return (
     <div className="flex flex-col h-full bg-gray-50">
 
-      {/* Área de mensagens */}
+      {/* ── Área de mensagens ──────────────────────────── */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto chat-scroll flex flex-col"
       >
+        {/* Estado vazio */}
         {mensagens.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-8 py-10 fade-in-up">
             <div className="w-14 h-14 bg-[#1B2A4A] rounded-2xl flex items-center justify-center mb-4 shadow-md">
@@ -195,6 +210,7 @@ export default function ChatInterface({
           </div>
         )}
 
+        {/* Mensagens */}
         {mensagens.length > 0 && (
           <div className="flex flex-col gap-5 px-4 md:px-8 py-6">
             {mensagens.map((msg) => (
@@ -202,6 +218,7 @@ export default function ChatInterface({
             key={msg.id}
             className={`flex gap-3 items-start ${msg.role === "user" ? "justify-end msg-user" : "justify-start msg-assistant"}`}
           >
+            {/* Avatar assistente */}
             {msg.role === "assistant" && (
               <div className="w-8 h-8 rounded-xl bg-[#1B2A4A] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-sm">
                 <Sparkles size={13} className="text-blue-300" />
@@ -215,6 +232,7 @@ export default function ChatInterface({
                   : "bg-white border border-gray-100 shadow-sm text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3.5"
               }`}
             >
+              {/* Typing dots */}
               {msg.role === "assistant" && msg.content === "" ? (
                 <div className="flex items-center gap-1.5 py-1 px-0.5">
                   <div className="w-2 h-2 bg-gray-300 rounded-full typing-dot" />
@@ -225,20 +243,30 @@ export default function ChatInterface({
                 <MensagemConteudo texto={msg.content} isUser={msg.role === "user"} />
               )}
 
+              {/* Botões copiar / compartilhar */}
               {msg.role === "assistant" && msg.content && (
-                <button
-                  onClick={() => copiarTexto(msg.content, msg.id)}
-                  className="absolute -bottom-6 right-0 opacity-0 group-hover:opacity-100 transition-all duration-150 flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-full px-2 py-0.5 shadow-sm"
-                >
-                  {copiado === msg.id ? (
-                    <><Check size={11} className="text-green-500" /> Copiado</>
-                  ) : (
-                    <><Copy size={11} /> Copiar</>
-                  )}
-                </button>
+                <div className="absolute -bottom-6 right-0 opacity-0 group-hover:opacity-100 transition-all duration-150 flex items-center gap-1.5">
+                  <button
+                    onClick={() => compartilharWhatsApp(msg.content)}
+                    className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-green-600 bg-white border border-gray-200 rounded-full px-2 py-0.5 shadow-sm transition-colors"
+                  >
+                    <Share2 size={11} /> Compartilhar
+                  </button>
+                  <button
+                    onClick={() => copiarTexto(msg.content, msg.id)}
+                    className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-full px-2 py-0.5 shadow-sm transition-colors"
+                  >
+                    {copiado === msg.id ? (
+                      <><Check size={11} className="text-green-500" /> Copiado</>
+                    ) : (
+                      <><Copy size={11} /> Copiar</>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
 
+            {/* Avatar usuário */}
             {msg.role === "user" && (
               <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
                 Eu
@@ -250,16 +278,17 @@ export default function ChatInterface({
         )}
       </div>
 
-      {/* Input area */}
+      {/* ── Input area ─────────────────────────────────── */}
       <div className="border-t border-gray-200 bg-white px-4 md:px-6 py-4 shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
 
+        {/* Banner de limite atingido */}
         {limiteBloqueado && (
           <div className="mb-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <Lock size={15} className="text-amber-500 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-amber-800 leading-tight">Limite do plano gratuito atingido</p>
-                <p className="text-xs text-amber-600 leading-tight mt-0.5">Você usou suas 10 perguntas. Faça upgrade para continuar.</p>
+                <p className="text-xs text-amber-600 leading-tight mt-0.5">Você usou suas 5 perguntas. Faça upgrade para continuar.</p>
               </div>
             </div>
             <Link
@@ -313,7 +342,7 @@ export default function ChatInterface({
             }`}
             style={{ minHeight: "46px" }}
             onInput={(e) => {
-              const t = e.target as HTMLTextAreaElement;
+              const t = e.target;
               t.style.height = "auto";
               t.style.height = Math.min(t.scrollHeight, 128) + "px";
             }}
@@ -347,7 +376,7 @@ export default function ChatInterface({
   );
 }
 
-function MensagemConteudo({ texto, isUser }: { texto: string; isUser: boolean }) {
+function MensagemConteudo({ texto, isUser }) {
   if (isUser) {
     return <p className="whitespace-pre-wrap">{texto}</p>;
   }
@@ -411,19 +440,15 @@ function MensagemConteudo({ texto, isUser }: { texto: string; isUser: boolean })
   );
 }
 
-function formatarInline(texto: string): React.ReactNode {
+function formatarInline(texto) {
   const partes = texto.split(/(\*\*.*?\*\*|`.*?`)/g);
   return partes.map((p, i) => {
     if (p.startsWith("**") && p.endsWith("**")) {
-      return <strong key={i} className="font-semibold text-gray-900">{p.slice(2, -2)}</strong>;
+      return React.createElement('strong', { key: i, className: "font-semibold text-gray-900" }, p.slice(2, -2));
     }
     if (p.startsWith("`") && p.endsWith("`")) {
-      return (
-        <code key={i} className="bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-[12px] font-mono">
-          {p.slice(1, -1)}
-        </code>
-      );
+      return React.createElement('code', { key: i, className: "bg-gray-100 text-gray-800 rounded px-1 py-0.5 text-[12px] font-mono" }, p.slice(1, -1));
     }
     return p;
   });
-}
+  }
