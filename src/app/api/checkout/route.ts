@@ -6,7 +6,7 @@ const ASAAS_BASE_URL = process.env.ASAAS_SANDBOX === "true"
   ? "https://sandbox.asaas.com/api/v3"
   : "https://www.asaas.com/api/v3";
 
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
+const ASAAS_API_KEY = (process.env.ASAAS_API_KEY ?? "").trim();
 
 // ── Tabela de preços ───────────────────────────────────
 const PLANOS: Record<string, { nome: string; mensal: number; anual: number }> = {
@@ -28,7 +28,6 @@ async function asaasRequest(path: string, method: string, body?: object) {
   const text = await res.text();
 
   if (!text.trim()) {
-    // Asaas retornou corpo vazio — geralmente erro de autenticação (401/403)
     return {
       errors: [{ description: `HTTP ${res.status} — resposta vazia. Verifique a ASAAS_API_KEY.` }],
     };
@@ -45,7 +44,6 @@ async function asaasRequest(path: string, method: string, body?: object) {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verifica se ASAAS_API_KEY está configurada
     if (!ASAAS_API_KEY) {
       return NextResponse.json(
         { error: "Pagamentos não configurados. Configure ASAAS_API_KEY no .env.local." },
@@ -53,34 +51,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Autentica o usuário
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    // 3. Lê o corpo da requisição
     const { plano, ciclo } = await req.json() as { plano: string; ciclo: "mensal" | "anual" };
 
     if (!PLANOS[plano]) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
-    // 4. Busca dados da empresa
     const { data: empresa } = await supabase
       .from("empresas")
       .select("id, nome_fantasia, cnpj, asaas_customer_id")
       .eq("user_id", user.id)
       .single();
 
-    // 5. Cria ou recupera cliente no Asaas
     let customerId = empresa?.asaas_customer_id as string | null;
 
     if (!customerId) {
       const cnpjLimpo = (empresa?.cnpj ?? "").replace(/\D/g, "");
 
-      // cpfCnpj é obrigatório no Asaas — bloqueia antes de chamar a API
       if (!cnpjLimpo) {
         return NextResponse.json(
           { error: "Complete seu perfil com o CNPJ antes de assinar um plano.", cnpjAusente: true },
@@ -94,7 +87,6 @@ export async function POST(req: NextRequest) {
         cpfCnpj: cnpjLimpo,
       };
 
-      // Remove campos opcionais vazios (name e email não devem ser removidos)
       if (!customerBody.email) delete customerBody.email;
 
       const customer = await asaasRequest("/customers", "POST", customerBody);
@@ -110,14 +102,12 @@ export async function POST(req: NextRequest) {
 
       customerId = customer.id as string;
 
-      // Salva o customer ID no banco
       await supabase
         .from("empresas")
         .update({ asaas_customer_id: customerId })
         .eq("id", empresa?.id);
     }
 
-    // 6. Cria a assinatura no Asaas
     const planoInfo = PLANOS[plano];
     const valor = ciclo === "anual" ? planoInfo.anual : planoInfo.mensal;
     const cicloAsaas = ciclo === "anual" ? "YEARLY" : "MONTHLY";
@@ -143,7 +133,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 7. Salva o subscription ID no banco
     await supabase
       .from("empresas")
       .update({
@@ -154,7 +143,6 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", empresa?.id);
 
-    // 8. Busca o link de pagamento da primeira cobrança
     const payments = await asaasRequest(
       `/subscriptions/${subscription.id}/payments`,
       "GET"
@@ -162,7 +150,6 @@ export async function POST(req: NextRequest) {
 
     const firstPayment = payments?.data?.[0];
 
-    // URL base de acordo com o ambiente
     const asaasWebBase = process.env.ASAAS_SANDBOX === "true"
       ? "https://sandbox.asaas.com"
       : "https://www.asaas.com";
