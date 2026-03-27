@@ -63,20 +63,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
+    // 4. Busca dados da empresa
     const { data: empresa } = await supabase
       .from("empresas")
-      .select("id, nome_fantasia, cnpj, asaas_customer_id")
+      .select("id, nome_fantasia, cnpj, cpf_socio, asaas_customer_id")
       .eq("user_id", user.id)
       .single();
 
+    // 5. Cria ou recupera cliente no Asaas
     let customerId = empresa?.asaas_customer_id as string | null;
 
     if (!customerId) {
-      const cnpjLimpo = (empresa?.cnpj ?? "").replace(/\D/g, "");
+      // Asaas aceita CPF (11 dígitos) ou CNPJ (14 dígitos) — usa o que estiver preenchido
+      const cpfCnpj = (empresa?.cnpj ?? empresa?.cpf_socio ?? "").replace(/\D/g, "");
 
-      if (!cnpjLimpo) {
+      if (!cpfCnpj) {
         return NextResponse.json(
-          { error: "Complete seu perfil com o CNPJ antes de assinar um plano.", cnpjAusente: true },
+          { error: "Preencha seu CPF ou CNPJ no perfil antes de assinar um plano.", cnpjAusente: true },
           { status: 422 }
         );
       }
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
       const customerBody: Record<string, string> = {
         name: empresa?.nome_fantasia ?? user.email ?? "Cliente",
         email: user.email ?? "",
-        cpfCnpj: cnpjLimpo,
+        cpfCnpj,
       };
 
       if (!customerBody.email) delete customerBody.email;
@@ -108,6 +111,7 @@ export async function POST(req: NextRequest) {
         .eq("id", empresa?.id);
     }
 
+    // 6. Cria a assinatura no Asaas
     const planoInfo = PLANOS[plano];
     const valor = ciclo === "anual" ? planoInfo.anual : planoInfo.mensal;
     const cicloAsaas = ciclo === "anual" ? "YEARLY" : "MONTHLY";
@@ -143,6 +147,7 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", empresa?.id);
 
+    // 8. Busca o link de pagamento da primeira cobrança
     const payments = await asaasRequest(
       `/subscriptions/${subscription.id}/payments`,
       "GET"
