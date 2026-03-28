@@ -208,7 +208,8 @@ export default function CadastroPage() {
       <div className="w-full max-w-md relative">
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-base mx-auto mb-3 shadow-xl shadow-blue-900/40">GP</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-14 h-14 object-contain mx-auto mb-3 drop-shadow-2xl" />
           <h1 className="text-lg font-bold text-white">Meu Gerente PJ</h1>
           <div className="flex items-center justify-center gap-1.5 mt-1">
             <Sparkles size={11} className="text-blue-300" />
