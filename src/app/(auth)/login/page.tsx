@@ -43,9 +43,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm relative">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-lg mx-auto mb-4 shadow-xl shadow-blue-900/40">
-            GP
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-16 h-16 object-contain mx-auto mb-4 drop-shadow-2xl" />
           <h1 className="text-xl font-bold text-white">Meu Gerente PJ</h1>
           <div className="flex items-center justify-center gap-1.5 mt-1.5">
             <Sparkles size={12} className="text-blue-300" />
