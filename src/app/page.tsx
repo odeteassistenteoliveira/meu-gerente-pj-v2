@@ -34,7 +34,8 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-[#1B2A4A] rounded-lg flex items-center justify-center font-black text-white text-xs">GP</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-9 h-9 object-contain" />
             <span className="font-bold text-gray-900 text-[15px]">Meu Gerente PJ</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm text-gray-500">
@@ -329,7 +330,8 @@ export default function LandingPage() {
       <footer className="py-8 px-5 md:px-8 bg-gray-900">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-md flex items-center justify-center font-black text-white text-[9px]">GP</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-7 h-7 object-contain" />
             <span className="text-gray-400 text-sm font-medium">Meu Gerente PJ</span>
           </div>
           <p className="text-gray-500 text-xs text-center">© 2026 Meu Gerente PJ. Todos os direitos reservados. · LGPD compliance</p>
