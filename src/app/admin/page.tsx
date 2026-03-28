@@ -393,7 +393,8 @@ export default function AdminPage() {
       {/* Header */}
       <header className="bg-[#1B2A4A] text-white px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center font-black text-[11px]">GP</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-9 h-9 object-contain" />
           <div>
             <p className="font-bold text-sm">Painel Admin</p>
             <div className="flex items-center gap-1"><Sparkles size={9} className="text-blue-300" /><p className="text-[10px] text-blue-300">Meu Gerente PJ</p></div>
