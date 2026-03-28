@@ -11,9 +11,8 @@ export default function NotFound() {
 
       <div className="text-center relative max-w-md">
         {/* Logo */}
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-xl mx-auto mb-6 shadow-xl shadow-blue-900/40">
-          GP
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-18 h-18 object-contain mx-auto mb-6 drop-shadow-2xl" style={{width: 72, height: 72}} />
 
         {/* Número 404 */}
         <p className="text-8xl font-black text-white/10 select-none leading-none mb-2">404</p>
