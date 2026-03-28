@@ -65,9 +65,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="px-4 py-5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center font-black text-[11px] shadow">
-              GP
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-9 h-9 object-contain" />
             <div>
               <p className="font-bold text-[12px] leading-tight">Meu Gerente PJ</p>
               <div className="flex items-center gap-1 mt-0.5">
@@ -171,7 +170,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Mobile Header ──────────────────────────── */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-[#1B2A4A] text-white z-40 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center font-black text-[10px]">GP</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-8 h-8 object-contain" />
           <span className="font-bold text-[13px]">Meu Gerente PJ</span>
         </div>
         <button onClick={() => setMenuAberto(!menuAberto)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
