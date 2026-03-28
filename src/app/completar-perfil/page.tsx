@@ -130,9 +130,8 @@ export default function CompletarPerfilPage() {
       <div className="w-full max-w-md">
         {/* Logo e título */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center font-bold text-white text-base mx-auto mb-3 shadow-xl shadow-blue-900/40">
-            GP
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-pj.svg" alt="Meu Gerente PJ" className="w-14 h-14 object-contain mx-auto mb-3 drop-shadow-xl" />
           <h1 className="text-lg font-bold text-gray-900">Meu Gerente PJ</h1>
           <h2 className="text-[15px] font-bold text-gray-900 mt-6 mb-2">Complete seu perfil</h2>
           <p className="text-sm text-gray-500">Para usar o Meu Gerente PJ, precisamos de algumas informações da sua empresa.</p>
