@@ -126,9 +126,10 @@ export async function POST(req: NextRequest) {
 
       if (customer.errors || !customer.id) {
         console.error("Asaas customer error:", JSON.stringify(customer));
-        // Sanitize error message - don't leak Asaas details
+        const asaasErrors = customer.errors ?? [];
+        const firstError = asaasErrors[0]?.description ?? "Verifique seus dados e tente novamente.";
         return NextResponse.json(
-          { error: "Erro ao criar cliente. Verifique seus dados e tente novamente." },
+          { error: `Erro ao criar cliente: ${firstError}` },
           { status: 502 }
         );
       }
@@ -160,10 +161,13 @@ export async function POST(req: NextRequest) {
     });
 
     if (subscription.errors || !subscription.id) {
-      console.error("Asaas subscription error:", subscription);
-      // Sanitize error message
+      console.error("Asaas subscription error:", JSON.stringify(subscription));
+      // Extract Asaas error description for debugging
+      const asaasErrors = subscription.errors ?? [];
+      const firstError = asaasErrors[0]?.description ?? "Erro desconhecido do gateway de pagamento.";
+      console.error("Asaas subscription first error:", firstError);
       return NextResponse.json(
-        { error: "Erro ao criar assinatura. Tente novamente em instantes." },
+        { error: `Erro ao criar assinatura: ${firstError}` },
         { status: 502 }
       );
     }
