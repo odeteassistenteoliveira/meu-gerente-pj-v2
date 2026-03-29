@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
 
 // Cliente admin (service role) para atualizar sem RLS
 const supabaseAdmin = createAdminClient(
@@ -15,8 +16,18 @@ const ASAAS_BASE_URL =
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`cancelar-plano:${ip}`, RATE_LIMITS.checkout);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     // 1. Autentica o usuario
     const supabase = await createClient();
     const {

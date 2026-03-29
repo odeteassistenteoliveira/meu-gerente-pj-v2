@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
+import { webhookAsaasSchema, formatZodError } from "@/lib/security/validators";
 
 // Cliente admin (service role) para atualizar sem RLS
 const supabaseAdmin = createClient(
@@ -15,7 +17,8 @@ const PLANO_MAP: Record<string, string> = {
 };
 
 // -- Helpers
-function parseExternalRef(ref: string) {
+function parseExternalRef(ref: string | undefined) {
+  if (!ref) return null;
   const parts = (ref ?? "").split("|");
   if (parts.length < 2) return null;
   return { userId: parts[0], planoSlug: parts[1], ciclo: parts[2] ?? "mensal" };
@@ -26,6 +29,16 @@ const GRACE_PERIOD_DAYS = 7;
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`webhook:${ip}`, RATE_LIMITS.webhook);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     // -- Verificacao de autenticidade do webhook
     const webhookSecret = process.env.ASAAS_WEBHOOK_SECRET;
     if (webhookSecret) {
@@ -36,7 +49,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const event = await req.json();
+    const body = await req.json();
+
+    // Zod validation
+    const parsed = webhookAsaasSchema.safeParse(body);
+    if (!parsed.success) {
+      console.warn("Webhook Asaas: validação falhou:", formatZodError(parsed.error));
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+
+    const event = parsed.data;
     const eventType: string = event.event ?? "";
     const payment = event.payment ?? {};
     const subscription = event.subscription ?? {};

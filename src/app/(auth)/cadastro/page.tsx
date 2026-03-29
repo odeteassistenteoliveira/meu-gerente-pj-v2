@@ -92,6 +92,7 @@ export default function CadastroPage() {
   const [temContador, setTemContador] = useState(false);
   const [desafios, setDesafios] = useState<string[]>([]);
   const [comoConheceu, setComoConheceu] = useState("");
+  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   function toggleDesafio(d: string) {
     setDesafios((prev) =>
@@ -183,6 +184,19 @@ export default function CadastroPage() {
     });
 
     if (error) { setErro("Erro ao salvar dados. Tente novamente."); setCarregando(false); return; }
+
+    // Registrar consentimento com LGPD
+    try {
+      await fetch("/api/consentimento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: "termos_uso",
+          versao_termo: "1.0",
+          aceito: true,
+        }),
+      }).catch(() => {});
+    } catch (_) {}
 
     // Enviar email de boas-vindas (fire and forget — não bloqueia o fluxo)
     try {
@@ -402,13 +416,33 @@ export default function CadastroPage() {
 
                 {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{erro}</div>}
 
+                <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <input
+                    type="checkbox"
+                    checked={aceitouTermos}
+                    onChange={(e) => setAceitouTermos(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-blue-600 cursor-pointer flex-shrink-0"
+                    id="termos-checkbox"
+                  />
+                  <label htmlFor="termos-checkbox" className="text-xs text-gray-600 cursor-pointer flex-1">
+                    Concordo com os{" "}
+                    <Link href="/termos" className="text-blue-600 font-semibold hover:underline" target="_blank">
+                      Termos de Uso
+                    </Link>
+                    {" "}e a{" "}
+                    <Link href="/politica-privacidade" className="text-blue-600 font-semibold hover:underline" target="_blank">
+                      Política de Privacidade
+                    </Link>
+                  </label>
+                </div>
+
                 <div className="flex gap-2 pt-1">
                   <button type="button" onClick={() => setEtapa("empresa")}
                     className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-[14px] font-medium hover:bg-gray-50 transition-colors">
                     Voltar
                   </button>
-                  <button type="submit" disabled={carregando}
-                    className="flex-[2] btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
+                  <button type="submit" disabled={carregando || !aceitouTermos}
+                    className="flex-[2] btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px] disabled:opacity-50">
                     {carregando && <Loader2 size={15} className="animate-spin" />}
                     {carregando ? "Salvando..." : "Acessar o Gerente PJ"}
                   </button>

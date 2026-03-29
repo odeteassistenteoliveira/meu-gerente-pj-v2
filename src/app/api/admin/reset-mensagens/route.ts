@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
+import { adminResetSchema, formatZodError } from "@/lib/security/validators";
 
 const ADMIN_EMAIL = "renankz@gmail.com";
 
@@ -12,6 +14,16 @@ const supabaseAdmin = createAdminClient(
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`admin-reset:${ip}`, RATE_LIMITS.admin);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     // 1. Verifica que quem está chamando é o admin
     const supabase = await createClient();
     const {
@@ -23,11 +35,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Lê o empresa_id do body
-    const { empresa_id } = (await req.json()) as { empresa_id: string };
+    const body = await req.json();
 
-    if (!empresa_id) {
-      return NextResponse.json({ error: "empresa_id obrigatório" }, { status: 400 });
+    // Zod validation
+    const parsed = adminResetSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed.error) },
+        { status: 400 }
+      );
     }
+
+    const { empresa_id } = parsed.data;
 
     // 3. Reseta o contador de mensagens
     const { error } = await supabaseAdmin

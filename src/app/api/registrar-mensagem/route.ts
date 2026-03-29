@@ -1,10 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
 
 const LIMITE_STARTER = 10;
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`registrar-mensagem:${ip}`, RATE_LIMITS.general);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     const supabase = await createClient();
 
     const {

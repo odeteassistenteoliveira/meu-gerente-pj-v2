@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Calculator, CreditCard, Building2, TrendingUp, Landmark,
-  LayoutDashboard, LogOut, Menu, X, Sparkles, ShieldCheck, UserCog, Zap, MessageSquarePlus
+  LayoutDashboard, LogOut, Menu, X, Sparkles, ShieldCheck, UserCog, Zap, MessageSquarePlus, Shield
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -125,6 +125,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
+        {/* Segurança link */}
+        <div className="px-2 pb-0.5">
+          <Link
+            href="/seguranca"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all duration-150 ${
+              pathname === "/seguranca" ? "nav-item-active" : "text-blue-100/70 hover:bg-white/8 hover:text-white"
+            }`}
+          >
+            <Shield size={15} className={pathname === "/seguranca" ? "text-white" : "text-blue-300/70"} />
+            <span>Segurança</span>
+          </Link>
+        </div>
+
         {/* Admin link */}
         {email === "renankz@gmail.com" && (
           <div className="px-2 pb-1">
@@ -207,6 +220,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <UserCog size={18} />
               <span>Meu Perfil</span>
+            </Link>
+
+            {/* Segurança */}
+            <Link
+              href="/seguranca"
+              onClick={() => setMenuAberto(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-medium transition-all ${
+                pathname === "/seguranca" ? "nav-item-active" : "text-blue-100/80"
+              }`}
+            >
+              <Shield size={18} />
+              <span>Segurança</span>
             </Link>
           </nav>
 

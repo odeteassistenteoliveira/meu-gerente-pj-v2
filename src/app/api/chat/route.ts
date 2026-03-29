@@ -1,5 +1,8 @@
+import { NextRequest } from "next/server";
 import { getSystemPrompt } from "@/lib/anthropic/prompts";
 import type { ModuloIA } from "@/types";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security/rate-limiter";
+import { chatSchema, formatZodError } from "@/lib/security/validators";
 
 export const runtime = "edge";
 export const maxDuration = 60;
@@ -7,17 +10,30 @@ export const maxDuration = 60;
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { messages, modulo, empresa } = (await req.json()) as {
-      messages: { role: "user" | "assistant"; content: string }[];
-      modulo: ModuloIA;
-      empresa?: Record<string, unknown>;
-    };
-
-    if (!messages?.length) {
-      return Response.json({ error: "Mensagens sao obrigatorias" }, { status: 400 });
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`chat:${ip}`, RATE_LIMITS.chat);
+    if (!rl.success) {
+      return Response.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
     }
+
+    const body = await req.json();
+
+    // Zod validation
+    const parsed = chatSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: formatZodError(parsed.error) },
+        { status: 400 }
+      );
+    }
+
+    const { messages, modulo, empresa } = parsed.data;
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {

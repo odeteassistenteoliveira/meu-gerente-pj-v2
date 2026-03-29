@@ -46,11 +46,8 @@ export default function CompletarPerfilPage() {
         return;
       }
 
-      const { data: empresa } = await supabase
-        .from("empresas")
-        .select("nome_fantasia, cnpj, cpf_socio")
-        .eq("user_id", user.id)
-        .single();
+      const res = await fetch("/api/perfil");
+      const empresa = await res.json();
 
       if (empresa) {
         setNomeFantasia(empresa.nome_fantasia || "");
@@ -85,26 +82,18 @@ export default function CompletarPerfilPage() {
       return;
     }
 
-    // Atualizar no banco
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setErro("Sessão expirada. Faça login novamente.");
-      setCarregando(false);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("empresas")
-      .update({
+    // Atualizar via API
+    const res = await fetch("/api/perfil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         nome_fantasia: nomeFantasia,
         cnpj: cnpjLimpo || null,
         cpf_socio: cpfLimpo || null,
-      })
-      .eq("user_id", user.id);
+      }),
+    });
 
-    if (error) {
+    if (!res.ok) {
       setErro("Erro ao salvar perfil. Tente novamente.");
       setCarregando(false);
       return;

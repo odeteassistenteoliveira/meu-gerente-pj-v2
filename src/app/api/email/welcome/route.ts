@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
+import { emailWelcomeSchema, formatZodError } from "@/lib/security/validators";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || "Meu Gerente PJ <contato@meugerentepj.com.br>";
@@ -113,17 +115,33 @@ function buildWelcomeHtml(nomeEmpresa: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`email-welcome:${ip}`, RATE_LIMITS.email);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     if (!RESEND_API_KEY) {
       console.warn("[email/welcome] RESEND_API_KEY não configurada — email não enviado");
       return NextResponse.json({ ok: true, skipped: true });
     }
 
     const body = await req.json();
-    const { email, nomeEmpresa } = body;
 
-    if (!email) {
-      return NextResponse.json({ error: "Email obrigatório" }, { status: 400 });
+    // Zod validation
+    const parsed = emailWelcomeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed.error) },
+        { status: 400 }
+      );
     }
+
+    const { email, nomeEmpresa } = parsed.data;
 
     const html = buildWelcomeHtml(nomeEmpresa || "");
 

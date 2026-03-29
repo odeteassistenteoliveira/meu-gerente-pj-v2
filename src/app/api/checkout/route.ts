@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIP, rateLimitHeaders, RATE_LIMITS } from "@/lib/security";
+import { checkoutSchema, formatZodError } from "@/lib/security/validators";
+import { decrypt } from "@/lib/security/encryption";
+import { auditLog } from "@/lib/security/audit";
 
 // ── Configuração Asaas ─────────────────────────────────
 const ASAAS_BASE_URL = process.env.ASAAS_SANDBOX === "true"
@@ -44,6 +48,16 @@ async function asaasRequest(path: string, method: string, body?: object) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIP(req);
+    const rl = checkRateLimit(`checkout:${ip}`, RATE_LIMITS.checkout);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em instantes." },
+        { status: 429, headers: rateLimitHeaders(rl) }
+      );
+    }
+
     if (!ASAAS_API_KEY) {
       return NextResponse.json(
         { error: "Pagamentos não configurados. Configure ASAAS_API_KEY no .env.local." },
@@ -57,7 +71,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    const { plano, ciclo } = await req.json() as { plano: string; ciclo: "mensal" | "anual" };
+    const body = await req.json();
+
+    // Zod validation
+    const parsed = checkoutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed.error) },
+        { status: 400 }
+      );
+    }
+
+    const { plano, ciclo } = parsed.data;
 
     if (!PLANOS[plano]) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
@@ -75,7 +100,12 @@ export async function POST(req: NextRequest) {
 
     if (!customerId) {
       // Asaas aceita CPF (11 dígitos) ou CNPJ (14 dígitos) — usa o que estiver preenchido
-      const cpfCnpj = (empresa?.cnpj ?? empresa?.cpf_socio ?? "").replace(/\D/g, "");
+      // Decrypt sensitive data before sending to Asaas
+      const cnpjEncrypted = empresa?.cnpj ?? "";
+      const cpfEncrypted = empresa?.cpf_socio ?? "";
+      const cnpjDecrypted = decrypt(cnpjEncrypted);
+      const cpfDecrypted = decrypt(cpfEncrypted);
+      const cpfCnpj = (cnpjDecrypted ?? cpfDecrypted ?? "").replace(/\D/g, "");
 
       if (!cpfCnpj) {
         return NextResponse.json(
@@ -96,9 +126,9 @@ export async function POST(req: NextRequest) {
 
       if (customer.errors || !customer.id) {
         console.error("Asaas customer error:", JSON.stringify(customer));
-        const asaasMsg = customer.errors?.[0]?.description ?? "Erro desconhecido no gateway";
+        // Sanitize error message - don't leak Asaas details
         return NextResponse.json(
-          { error: `Erro ao criar cliente no Asaas: ${asaasMsg}`, detail: customer.errors },
+          { error: "Erro ao criar cliente. Verifique seus dados e tente novamente." },
           { status: 502 }
         );
       }
@@ -131,8 +161,9 @@ export async function POST(req: NextRequest) {
 
     if (subscription.errors || !subscription.id) {
       console.error("Asaas subscription error:", subscription);
+      // Sanitize error message
       return NextResponse.json(
-        { error: "Erro ao criar assinatura", detail: subscription.errors },
+        { error: "Erro ao criar assinatura. Tente novamente em instantes." },
         { status: 502 }
       );
     }
@@ -170,6 +201,17 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
+
+    // Audit log
+    await auditLog({
+      user_id: user.id,
+      acao: "checkout_iniciado",
+      recurso: "subscriptions",
+      recurso_id: subscription.id,
+      detalhes: { plano, ciclo },
+      ip_address: ip,
+      user_agent: req.headers.get("user-agent") ?? undefined,
+    });
 
     return NextResponse.json({ paymentUrl, subscriptionId: subscription.id });
   } catch (err) {

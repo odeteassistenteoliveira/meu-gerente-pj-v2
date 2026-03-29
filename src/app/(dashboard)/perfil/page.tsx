@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   User, Building2, Globe, Instagram, Linkedin,
   Save, Loader2, CheckCircle2, MapPin, Briefcase,
-  Sparkles, CreditCard, AlertTriangle, X, Crown, Zap, Star, CalendarCheck
+  Sparkles, CreditCard, AlertTriangle, X, Crown, Zap, Star, CalendarCheck, Download, Trash2, Shield
 } from "lucide-react";
 
 /* ── Opções de selects ─────────────────────────── */
@@ -138,6 +138,10 @@ export default function PerfilPage() {
   const [asaasSubscriptionId, setAsaasSubscriptionId] = useState<string | null>(null);
   const [cancelando, setCancelando] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteMotivo, setDeleteMotivo] = useState("");
+  const [deletando, setDeletando] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -193,10 +197,10 @@ export default function PerfilPage() {
     setErro("");
     setSaved(false);
 
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("empresas")
-      .update({
+    const res = await fetch("/api/perfil", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         nome_fantasia: nomeFantasia || null,
         cnpj: cnpj || null,
         cpf_socio: cpfSocio || null,
@@ -213,11 +217,11 @@ export default function PerfilPage() {
         num_funcionarios: numFunc || null,
         tem_contador: temContador,
         principais_desafios: desafios.length ? desafios : null,
-      })
-      .eq("id", empresaId);
+      }),
+    });
 
     setSaving(false);
-    if (error) {
+    if (!res.ok) {
       setErro("Erro ao salvar. Tente novamente.");
     } else {
       setSaved(true);
@@ -229,6 +233,45 @@ export default function PerfilPage() {
     setDesafios((prev) =>
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
+  }
+
+  async function handleExportarDados() {
+    setExportando(true);
+    try {
+      const res = await fetch("/api/conta/exportar");
+      if (!res.ok) throw new Error("Erro ao exportar");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `dados-pj-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setErro("Erro ao exportar dados. Tente novamente.");
+    } finally {
+      setExportando(false);
+    }
+  }
+
+  async function handleExcluirConta() {
+    setDeletando(true);
+    try {
+      const res = await fetch("/api/conta/excluir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motivo: deleteMotivo }),
+      });
+      if (!res.ok) throw new Error("Erro ao excluir");
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/");
+    } catch {
+      setErro("Erro ao excluir conta. Tente novamente.");
+      setDeletando(false);
+    }
   }
 
   async function handleCancelarPlano() {
@@ -587,6 +630,89 @@ export default function PerfilPage() {
             </div>
           </div>
         </Section>
+
+        {/* Dados e Privacidade (LGPD) */}
+        <Section icon={Shield} title="Dados e Privacidade (LGPD)" subtitle="Controle seus dados pessoais conforme Lei Geral de Proteção de Dados">
+          <div className="space-y-3">
+            <button
+              onClick={handleExportarDados}
+              disabled={exportando}
+              className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors"
+            >
+              <span className="flex items-center gap-2 font-medium text-[13px]">
+                <Download size={14} />
+                Exportar meus dados
+              </span>
+              {exportando && <Loader2 size={14} className="animate-spin" />}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl hover:bg-red-100 transition-colors"
+            >
+              <span className="flex items-center gap-2 font-medium text-[13px]">
+                <Trash2 size={14} />
+                Excluir minha conta
+              </span>
+            </button>
+          </div>
+        </Section>
+
+        {/* Delete account modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 bg-red-50 rounded-xl">
+                  <AlertTriangle size={20} className="text-red-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[15px] text-gray-900">Excluir conta permanentemente?</h3>
+                  <p className="text-[11px] text-gray-400">Essa ação não pode ser desfeita</p>
+                </div>
+                <button onClick={() => setShowDeleteModal(false)} className="ml-auto p-1 hover:bg-gray-100 rounded-lg">
+                  <X size={16} className="text-gray-400" />
+                </button>
+              </div>
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-5">
+                <p className="text-[12px] text-red-700 mb-3">Todos os seus dados serão deletados permanentemente, incluindo:</p>
+                <ul className="text-[11px] text-red-600 space-y-1 ml-1">
+                  <li>- Perfil da empresa e dados financeiros</li>
+                  <li>- Histórico de conversas com o consultor IA</li>
+                  <li>- Dados de assinatura e pagamentos</li>
+                </ul>
+              </div>
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Motivo da exclusão (opcional)</label>
+                <textarea
+                  value={deleteMotivo}
+                  onChange={(e) => setDeleteMotivo(e.target.value)}
+                  placeholder="Conte-nos por que está deixando o Meu Gerente PJ..."
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 text-sm rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleExcluirConta}
+                  disabled={deletando}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm rounded-xl hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+                >
+                  {deletando ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={14} className="animate-spin" /> Deletando...
+                    </span>
+                  ) : "Confirmar exclusão"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bottom save */}
         <div className="flex justify-end pb-6">
