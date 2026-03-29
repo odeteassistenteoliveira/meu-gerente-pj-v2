@@ -103,9 +103,10 @@ export async function POST(req: NextRequest) {
       // Decrypt sensitive data before sending to Asaas
       const cnpjEncrypted = empresa?.cnpj ?? "";
       const cpfEncrypted = empresa?.cpf_socio ?? "";
-      const cnpjDecrypted = decrypt(cnpjEncrypted);
-      const cpfDecrypted = decrypt(cpfEncrypted);
-      const cpfCnpj = (cnpjDecrypted ?? cpfDecrypted ?? "").replace(/\D/g, "");
+      const cnpjDecrypted = cnpjEncrypted ? decrypt(cnpjEncrypted) : "";
+      const cpfDecrypted = cpfEncrypted ? decrypt(cpfEncrypted) : "";
+      // Use || (not ??) so empty strings fall through to the next value
+      const cpfCnpj = (cnpjDecrypted || cpfDecrypted || "").replace(/\D/g, "");
 
       if (!cpfCnpj) {
         return NextResponse.json(
