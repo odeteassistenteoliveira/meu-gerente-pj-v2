@@ -147,24 +147,25 @@ export default function PerfilPage() {
   useEffect(() => {
     async function load() {
       try {
+        // Get email from Supabase auth
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { setLoading(false); return; }
         setEmail(user.email ?? "");
 
-        const { data } = await supabase
-          .from("empresas")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        // Load profile via API (decrypts sensitive fields server-side)
+        const res = await fetch("/api/perfil");
+        const json = await res.json();
+        const data = json.data;
 
         if (data) {
           setEmpresaId(data.id);
           setNomeFantasia(data.nome_fantasia ?? "");
-          setCnpj(data.cnpj ?? "");
-          setCpfSocio(data.cpf_socio ?? "");
-          setTelefone(data.telefone ?? "");
-          setWhatsapp(data.whatsapp ?? "");
+          // Format decrypted values for display
+          setCnpj(data.cnpj ? formatarCNPJ(data.cnpj) : "");
+          setCpfSocio(data.cpf_socio ? formatarCPF(data.cpf_socio) : "");
+          setTelefone(data.telefone ? formatarTel(data.telefone) : "");
+          setWhatsapp(data.whatsapp ? formatarTel(data.whatsapp) : "");
           setCidade(data.cidade ?? "");
           setEstado(data.estado ?? "");
           setSiteUrl(data.site_url ?? "");
@@ -197,13 +198,17 @@ export default function PerfilPage() {
     setErro("");
     setSaved(false);
 
+    // Strip formatting — API expects digits only for CPF/CNPJ
+    const cnpjDigits = cnpj ? cnpj.replace(/\D/g, "") : null;
+    const cpfDigits = cpfSocio ? cpfSocio.replace(/\D/g, "") : null;
+
     const res = await fetch("/api/perfil", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nome_fantasia: nomeFantasia || null,
-        cnpj: cnpj || null,
-        cpf_socio: cpfSocio || null,
+        cnpj: cnpjDigits || null,
+        cpf_socio: cpfDigits || null,
         telefone: telefone || null,
         whatsapp: whatsapp || null,
         cidade: cidade || null,
