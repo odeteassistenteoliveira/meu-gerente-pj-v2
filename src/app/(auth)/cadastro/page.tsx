@@ -6,6 +6,18 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2, Sparkles, Eye, EyeOff, ChevronRight } from "lucide-react";
 
+// SVG do logo Google
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
+      <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
+      <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+      <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
 /* ── Dados de formulário ─────────────────────────── */
 const setores = [
   { value: "comercio",    label: "Comércio / Varejo" },
@@ -64,13 +76,31 @@ const etapasLabel: Record<string, string> = {
 export default function CadastroPage() {
   const [etapa, setEtapa] = useState<Etapa>("conta");
   const [carregando, setCarregando] = useState(false);
+  const [carregandoGoogle, setCarregandoGoogle] = useState(false);
   const [erro, setErro] = useState("");
   const [verSenha, setVerSenha] = useState(false);
   const router = useRouter();
 
+  async function handleGoogleCadastro() {
+    setErro("");
+    setCarregandoGoogle(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      },
+    });
+    if (error) {
+      setErro("Erro ao conectar com o Google. Tente novamente.");
+      setCarregandoGoogle(false);
+    }
+  }
+
   // Etapa 1
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   // Etapa 2 — Empresa
   const [nomeFantasia, setNomeFantasia] = useState("");
@@ -92,7 +122,6 @@ export default function CadastroPage() {
   const [temContador, setTemContador] = useState(false);
   const [desafios, setDesafios] = useState<string[]>([]);
   const [comoConheceu, setComoConheceu] = useState("");
-  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   function toggleDesafio(d: string) {
     setDesafios((prev) =>
@@ -161,38 +190,46 @@ export default function CadastroPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setErro("Sessão expirada. Faça login novamente."); setCarregando(false); return; }
 
-    const { error } = await supabase.from("empresas").insert({
-      user_id: user.id,
-      nome_fantasia: nomeFantasia,
-      cnpj: cnpj.replace(/\D/g, "") || null,
-      cpf_socio: cpfSocio.replace(/\D/g, "") || null,
-      telefone: telefone.replace(/\D/g, "") || null,
-      whatsapp: whatsapp.replace(/\D/g, "") || null,
-      site_url: siteUrl || null,
-      instagram: instagram || null,
-      linkedin: linkedin || null,
-      cidade: cidade || null,
-      estado: estado || null,
-      setor,
-      faturamento_anual: faturamento,
-      regime_tributario: regime,
-      num_funcionarios: numFunc,
-      tem_contador: temContador,
-      principais_desafios: desafios.length ? desafios : null,
-      como_conheceu: comoConheceu || null,
-      plano: "starter",
+    // Salvar empresa via API (campos sensíveis criptografados no servidor)
+    const perfilRes = await fetch("/api/perfil", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome_fantasia: nomeFantasia,
+        cnpj: cnpj.replace(/\D/g, "") || null,
+        cpf_socio: cpfSocio.replace(/\D/g, "") || null,
+        telefone: telefone.replace(/\D/g, "") || null,
+        whatsapp: whatsapp.replace(/\D/g, "") || null,
+        site_url: siteUrl || null,
+        instagram: instagram || null,
+        linkedin: linkedin || null,
+        cidade: cidade || null,
+        estado: estado || null,
+        setor,
+        faturamento_anual: faturamento,
+        regime_tributario: regime,
+        num_funcionarios: numFunc,
+        tem_contador: temContador,
+        principais_desafios: desafios.length ? desafios : null,
+        como_conheceu: comoConheceu || null,
+        plano: "starter",
+      }),
     });
 
-    if (error) { setErro("Erro ao salvar dados. Tente novamente."); setCarregando(false); return; }
+    if (!perfilRes.ok) {
+      const json = await perfilRes.json();
+      setErro(json.error || "Erro ao salvar dados. Tente novamente.");
+      setCarregando(false); return;
+    }
 
-    // Registrar consentimento com LGPD
+    // Registrar consentimento LGPD (fire and forget)
     try {
-      await fetch("/api/consentimento", {
+      fetch("/api/consentimento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tipo: "termos_uso",
-          versao_termo: "1.0",
+          tipo: "termos_uso_e_privacidade",
+          versao: "1.0",
           aceito: true,
         }),
       }).catch(() => {});
@@ -204,7 +241,7 @@ export default function CadastroPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user.email, nomeEmpresa: nomeFantasia }),
-      }).catch(() => {}); // silencia erros de rede
+      }).catch(() => {});
     } catch (_) {}
 
     setCarregando(false);
@@ -259,6 +296,29 @@ export default function CadastroPage() {
           {etapa === "conta" && (
             <>
               <h2 className="text-[15px] font-bold text-gray-900 mb-5">Criar sua conta</h2>
+
+              {/* Botão Google */}
+              <button
+                type="button"
+                onClick={handleGoogleCadastro}
+                disabled={carregandoGoogle || carregando}
+                className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 px-4 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed mb-4"
+              >
+                {carregandoGoogle ? (
+                  <Loader2 size={16} className="animate-spin text-gray-400" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                {carregandoGoogle ? "Redirecionando..." : "Cadastrar com Google"}
+              </button>
+
+              {/* Divisor */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400 font-medium">ou cadastre com email</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+
               <form onSubmit={handleCriarConta} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">Email</label>
@@ -273,8 +333,29 @@ export default function CadastroPage() {
                     </button>
                   </div>
                 </div>
+                {/* Consent banner — LGPD */}
+                <div className="flex items-start gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
+                  <input
+                    type="checkbox"
+                    id="aceite-termos"
+                    checked={aceitouTermos}
+                    onChange={(e) => setAceitouTermos(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  />
+                  <label htmlFor="aceite-termos" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
+                    Li e aceito os{" "}
+                    <a href="/termos-de-uso" target="_blank" className="text-blue-600 font-semibold hover:underline">
+                      Termos de Uso
+                    </a>{" "}
+                    e a{" "}
+                    <a href="/politica-de-privacidade" target="_blank" className="text-blue-600 font-semibold hover:underline">
+                      Política de Privacidade
+                    </a>.
+                  </label>
+                </div>
+
                 {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{erro}</div>}
-                <button type="submit" disabled={carregando || !email || !senha} className="w-full btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
+                <button type="submit" disabled={carregando || !email || !senha || !aceitouTermos} className="w-full btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
                   {carregando && <Loader2 size={15} className="animate-spin" />}
                   {carregando ? "Criando conta..." : "Continuar"}
                 </button>
@@ -416,33 +497,13 @@ export default function CadastroPage() {
 
                 {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">{erro}</div>}
 
-                <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={aceitouTermos}
-                    onChange={(e) => setAceitouTermos(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 accent-blue-600 cursor-pointer flex-shrink-0"
-                    id="termos-checkbox"
-                  />
-                  <label htmlFor="termos-checkbox" className="text-xs text-gray-600 cursor-pointer flex-1">
-                    Concordo com os{" "}
-                    <Link href="/termos" className="text-blue-600 font-semibold hover:underline" target="_blank">
-                      Termos de Uso
-                    </Link>
-                    {" "}e a{" "}
-                    <Link href="/politica-privacidade" className="text-blue-600 font-semibold hover:underline" target="_blank">
-                      Política de Privacidade
-                    </Link>
-                  </label>
-                </div>
-
                 <div className="flex gap-2 pt-1">
                   <button type="button" onClick={() => setEtapa("empresa")}
                     className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-[14px] font-medium hover:bg-gray-50 transition-colors">
                     Voltar
                   </button>
-                  <button type="submit" disabled={carregando || !aceitouTermos}
-                    className="flex-[2] btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px] disabled:opacity-50">
+                  <button type="submit" disabled={carregando}
+                    className="flex-[2] btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-[14px]">
                     {carregando && <Loader2 size={15} className="animate-spin" />}
                     {carregando ? "Salvando..." : "Acessar o Gerente PJ"}
                   </button>
